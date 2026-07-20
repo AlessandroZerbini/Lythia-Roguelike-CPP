@@ -25,6 +25,7 @@ struct Armor {
     std::string name;
     int damage_reduction;
     int durability;
+    int current_durability;
     WeaponType weakness1;
     WeaponType weakness2;
 
@@ -32,6 +33,7 @@ struct Armor {
         this->name="Unknown";
         this->damage_reduction = 0;
         this->durability = 0;
+        this->current_durability=this->durability;
         this->weakness1 = WeaponType::None;
         this->weakness2 = WeaponType::None;
     }
@@ -40,6 +42,7 @@ struct Armor {
         this->name=name;
         this->damage_reduction = damage_reduction;
         this->durability = durability;
+        this->current_durability=this->durability;
         this->weakness1 = WeaponType::None;
         this->weakness2 = WeaponType::None;
     }
@@ -48,12 +51,13 @@ struct Armor {
         this->name=name;
         this->damage_reduction = damage_reduction;
         this->durability = durability;
+        this->current_durability=this->durability;
         this->weakness1 = weakness1;
         this->weakness2 = weakness2;
     }
 
     bool is_broken() const {
-        return durability == 0;
+        return current_durability == 0;
     }
 };
 
@@ -61,6 +65,7 @@ struct Weapon {
     std::string name;
     WeaponType type;
     int durability;
+    int current_durability;
     int hit_rate;
     int damage;
     int crit_rate;
@@ -70,6 +75,7 @@ struct Weapon {
         this->name = "Unknown";
         this->type = WeaponType::None;
         this->durability = 0;
+        this->current_durability=this->durability;
         this->hit_rate = 0;
         this->damage = 0;
         this->crit_rate=0;
@@ -80,6 +86,7 @@ struct Weapon {
         this->name = name;
         this->type = type;
         this->durability = durability;
+        this->current_durability=this->durability;
         this->hit_rate = hit_rate;
         this->damage = damage;
         this->crit_rate = crit_rate;
@@ -87,7 +94,7 @@ struct Weapon {
     }
 
     bool is_broken() const {
-        if (!is_infinite) return durability <= 0;
+        if (!is_infinite) return current_durability <= 0;
         return false;
     }
 
@@ -154,7 +161,7 @@ struct Monster {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-wave_num);
         if (distrib(g)<=effective_hit_rate) {
-            if (!weapon.is_infinite) weapon.durability--;
+            if (!weapon.is_infinite) weapon.current_durability--;
             int additional_damage = 0;
             if (weapon.type == weakness1) {
                 known_weakness1 = true;
