@@ -16,6 +16,8 @@ enum class WeaponType {
     Fire,
     Thunder,
     Wind,
+    Water,
+    Ground,
     Dark,
     Light,
     None
@@ -217,12 +219,14 @@ struct Player {
 
 std::vector<Weapon> list_of_weapons = {
     {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
-    {"Ice magic", WeaponType::Ice, 0, 90, 3, 2, true},
+    {"Ice magic", WeaponType::Ice, 0, 90, 3, 5, true},
     {"Fire magic", WeaponType::Fire, 0, 70, 7, 10, true},
     {"Thunder magic", WeaponType::Thunder, 0, 75, 6, 25, true},
     {"Wind magic", WeaponType::Wind, 0, 85, 3, 15, true},
+    {"Water magic", WeaponType::Water, 0, 90, 5, 0, true},
+    {"Ground magic", WeaponType::Ground, 0, 70, 8, 0, true},
     {"Dark magic", WeaponType::Dark, 0, 60, 10, 25, true},
-    {"Light magic", WeaponType::Light, 0, 85, 5, 0, true},
+    {"Light magic", WeaponType::Light, 0, 85, 5, 25, true},
     {"Magic Sword", WeaponType::Physical, 20, 85, 5, 5, false},
     {"Dark magic Sword", WeaponType::Dark, 5, 75, 8, 25, false},
     {"Light magic Sword", WeaponType::Light, 25, 95, 5, 5, false}
@@ -234,9 +238,13 @@ std::vector<Monster> list_of_monsters = {
     {"monster3", 18, WeaponType::Fire, WeaponType::None, 5, 75, WeaponType::Ice},
     {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, 5, 70, WeaponType::Wind},
     {"monster5", 14, WeaponType::Light, WeaponType::Dark, 4, 90, WeaponType::Thunder},
-    {"monster6", 20, WeaponType::Wind, WeaponType::None, 3, 85, WeaponType::Fire},
+    {"monster6", 20, WeaponType::Wind, WeaponType::Water, 3, 85, WeaponType::Fire},
     {"monster7", 10, WeaponType::None, WeaponType::None, 7, 85, WeaponType::Dark},
     {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, 6, 75, WeaponType::Light},
     {"monster9", 24, WeaponType::None, WeaponType::None, 2, 75, WeaponType::Physical},
     {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, 5, 80, WeaponType::Ice},
+    {"monster11", 22, WeaponType::Thunder, WeaponType::Ice, 3, 80, WeaponType::Water},
+    {"monster12", 14, WeaponType::Ground, WeaponType::None, 6, 75, WeaponType::Thunder},
+    {"monster13", 18, WeaponType::Water, WeaponType::Ground, 4, 85, WeaponType::Fire},
+    {"monster14", 16, WeaponType::Wind, WeaponType::Water, 5, 80, WeaponType::Ground}
 };
