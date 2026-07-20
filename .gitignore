@@ -2,5 +2,7 @@
 *.out
 *.o
 *.obj
+*.xml
 .vscode/
 build/
+.idea/
