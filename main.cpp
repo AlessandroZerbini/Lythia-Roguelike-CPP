@@ -41,7 +41,7 @@ struct Armor {
         this->weakness1 = WeaponType::None;
         this->weakness2 = WeaponType::None;
         this->resistance1 = WeaponType::None;
-        this->resistance1 = WeaponType::None;
+        this->resistance2 = WeaponType::None;
     }
 
     Armor(const std::string &name, const int damage_reduction, const int durability) {
@@ -52,7 +52,7 @@ struct Armor {
         this->weakness1 = WeaponType::None;
         this->weakness2 = WeaponType::None;
         this->resistance1 = WeaponType::None;
-        this->resistance1 = WeaponType::None;
+        this->resistance2 = WeaponType::None;
     }
 
     Armor(const std::string &name, const int damage_reduction, const int durability, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2) {
@@ -63,7 +63,7 @@ struct Armor {
         this->weakness1 = weakness1;
         this->weakness2 = weakness2;
         this->resistance1 = resistance1;
-        this->resistance1 = resistance2;
+        this->resistance2 = resistance2;
     }
 
     bool is_broken() const {
