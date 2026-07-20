@@ -109,6 +109,7 @@ struct Monster {
     bool known_weakness2;
     int damage;
     int hit_rate;
+    WeaponType type;
 
     Monster() {
         this->name = "Unknown";
@@ -120,9 +121,10 @@ struct Monster {
         this->known_weakness2 = false;
         this->damage = 0;
         this->hit_rate = 0;
+        this->type = WeaponType::None;
     }
 
-    Monster(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const int damage, const int hit_rate) {
+    Monster(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const int damage, const int hit_rate, const WeaponType type) {
         this->name = name;
         this->base_hp = base_hp;
         this->hp_remaining = base_hp;
@@ -132,6 +134,7 @@ struct Monster {
         this->known_weakness2 = false;
         this->damage = damage;
         this->hit_rate = hit_rate;
+        this->type = type;
     }
 
     void upgrade_monster(const int wave_num) {
@@ -211,14 +214,14 @@ std::vector<Weapon> list_of_weapons = {
 };
 
 std::vector<Monster> list_of_monsters = {
-    {"monster1", 12, WeaponType::None, WeaponType::None, 6, 80},
-    {"monster2", 15, WeaponType::Ice, WeaponType::None, 4, 85},
-    {"monster3", 18, WeaponType::Fire, WeaponType::None, 5, 75},
-    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, 5, 70},
-    {"monster5", 14, WeaponType::Light, WeaponType::Dark, 4, 90},
-    {"monster6", 20, WeaponType::Wind, WeaponType::None, 3, 85},
-    {"monster7", 10, WeaponType::None, WeaponType::None, 7, 85},
-    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, 6, 75},
-    {"monster9", 24, WeaponType::None, WeaponType::None, 2, 75},
-    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, 5, 80},
+    {"monster1", 12, WeaponType::None, WeaponType::None, 6, 80, WeaponType::Physical},
+    {"monster2", 15, WeaponType::Ice, WeaponType::None, 4, 85, WeaponType::Physical},
+    {"monster3", 18, WeaponType::Fire, WeaponType::None, 5, 75, WeaponType::Ice},
+    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, 5, 70, WeaponType::Wind},
+    {"monster5", 14, WeaponType::Light, WeaponType::Dark, 4, 90, WeaponType::Thunder},
+    {"monster6", 20, WeaponType::Wind, WeaponType::None, 3, 85, WeaponType::Fire},
+    {"monster7", 10, WeaponType::None, WeaponType::None, 7, 85, WeaponType::Dark},
+    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, 6, 75, WeaponType::Light},
+    {"monster9", 24, WeaponType::None, WeaponType::None, 2, 75, WeaponType::Physical},
+    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, 5, 80, WeaponType::Ice},
 };
