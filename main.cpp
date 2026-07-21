@@ -129,6 +129,10 @@ struct Monster {
     WeaponType weakness2;
     bool known_weakness1;
     bool known_weakness2;
+    WeaponType resistance1;
+    WeaponType resistance2;
+    bool known_resistance1;
+    bool known_resistance2;
     int damage;
     int hit_rate;
     WeaponType type;
@@ -141,12 +145,16 @@ struct Monster {
         this->weakness2 = WeaponType::None;
         this->known_weakness1 = false;
         this->known_weakness2 = false;
+        this->resistance1 = WeaponType::None;
+        this->resistance2 = WeaponType::None;
+        this->known_resistance1 = false;
+        this->known_resistance2 = false;
         this->damage = 0;
         this->hit_rate = 0;
         this->type = WeaponType::None;
     }
 
-    Monster(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const int damage, const int hit_rate, const WeaponType type) {
+    Monster(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2, const int damage, const int hit_rate, const WeaponType type) {
         this->name = name;
         this->base_hp = base_hp;
         this->hp_remaining = base_hp;
@@ -154,6 +162,10 @@ struct Monster {
         this->weakness2 = weakness2;
         this->known_weakness1 = false;
         this->known_weakness2 = false;
+        this->resistance1 = resistance1;
+        this->resistance2 = resistance2;
+        this->known_resistance1 = false;
+        this->known_resistance2 = false;
         this->damage = damage;
         this->hit_rate = hit_rate;
         this->type = type;
@@ -161,6 +173,7 @@ struct Monster {
 
     void upgrade_monster(const int wave_num) {
         this->base_hp += 2*wave_num;
+        this->hp_remaining = this->base_hp;
         this->damage += wave_num;
         this->hit_rate += wave_num;
     }
@@ -186,7 +199,15 @@ struct Monster {
                 known_weakness2 = true;
                 additional_damage += 2;
             }
-            int damage_dealt = weapon.damage + additional_damage;
+            if (weapon.type == resistance1) {
+                known_resistance1 = true;
+                additional_damage -= 2;
+            }
+            if (weapon.type == resistance2) {
+                known_resistance2 = true;
+                additional_damage -= 1;
+            }
+            int damage_dealt = std::max(0, weapon.damage + additional_damage);
             if (distrib(g)<=weapon.crit_rate) {
                 damage_dealt *= 3;
                 std::cout << "Wow! You did a critical hit! ";
@@ -262,18 +283,18 @@ std::vector<Weapon> list_of_weapons = {
 };
 
 std::vector<Monster> list_of_monsters = {
-    {"monster1", 12, WeaponType::None, WeaponType::None, 6, 80, WeaponType::Physical},
-    {"monster2", 15, WeaponType::Ice, WeaponType::None, 4, 85, WeaponType::Physical},
-    {"monster3", 18, WeaponType::Fire, WeaponType::None, 5, 75, WeaponType::Ice},
-    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, 5, 70, WeaponType::Wind},
-    {"monster5", 14, WeaponType::Light, WeaponType::Dark, 4, 90, WeaponType::Thunder},
-    {"monster6", 20, WeaponType::Wind, WeaponType::Water, 3, 85, WeaponType::Fire},
-    {"monster7", 10, WeaponType::None, WeaponType::None, 7, 85, WeaponType::Dark},
-    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, 6, 75, WeaponType::Light},
-    {"monster9", 24, WeaponType::None, WeaponType::None, 2, 75, WeaponType::Physical},
-    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, 5, 80, WeaponType::Ice},
-    {"monster11", 22, WeaponType::Thunder, WeaponType::Ice, 3, 80, WeaponType::Water},
-    {"monster12", 14, WeaponType::Ground, WeaponType::None, 6, 75, WeaponType::Thunder},
-    {"monster13", 18, WeaponType::Water, WeaponType::Ground, 4, 85, WeaponType::Fire},
-    {"monster14", 16, WeaponType::Wind, WeaponType::Water, 5, 80, WeaponType::Ground}
+    {"monster1", 12, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, WeaponType::Physical},
+    {"monster2", 15, WeaponType::Ice, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, WeaponType::Physical},
+    {"monster3", 18, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::None, 5, 75, WeaponType::Ice},
+    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, WeaponType::Wind, WeaponType::Physical, 5, 70, WeaponType::Wind},
+    {"monster5", 14, WeaponType::Light, WeaponType::Dark, WeaponType::None, WeaponType::None, 4, 90, WeaponType::Thunder},
+    {"monster6", 20, WeaponType::Wind, WeaponType::Water, WeaponType::Fire, WeaponType::Ice, 3, 85, WeaponType::Fire},
+    {"monster7", 10, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::Dark, 7, 85, WeaponType::Dark},
+    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, WeaponType::Light, WeaponType::None, 6, 75, WeaponType::Light},
+    {"monster9", 24, WeaponType::None, WeaponType::None, WeaponType::Fire, WeaponType::None, 2, 75, WeaponType::Physical},
+    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, WeaponType::None, WeaponType::None, 5, 80, WeaponType::Ice},
+    {"monster11", 22, WeaponType::Thunder, WeaponType::Ice, WeaponType::Water, WeaponType::Dark, 3, 80, WeaponType::Water},
+    {"monster12", 14, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, 6, 75, WeaponType::Thunder},
+    {"monster13", 18, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, 4, 85, WeaponType::Fire},
+    {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, WeaponType::Ground}
 };
