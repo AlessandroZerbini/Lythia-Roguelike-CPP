@@ -10,6 +10,8 @@
 std::random_device rd;
 std::mt19937 g(rd());
 
+//aggiungere ai mostri un crit rate e un evasion rate
+
 enum class WeaponType {
     Physical,
     Ice,
