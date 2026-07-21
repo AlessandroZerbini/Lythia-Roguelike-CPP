@@ -32,6 +32,7 @@ struct Armor {
     WeaponType weakness2;
     WeaponType resistance1;
     WeaponType resistance2;
+    bool is_unbreakable;
 
     Armor() {
         this->name="Unknown";
@@ -42,9 +43,10 @@ struct Armor {
         this->weakness2 = WeaponType::None;
         this->resistance1 = WeaponType::None;
         this->resistance2 = WeaponType::None;
+        this->is_unbreakable = true;
     }
 
-    Armor(const std::string &name, const int damage_reduction, const int durability) {
+    Armor(const std::string &name, const int damage_reduction, const int durability, const bool is_unbreakable) {
         this->name=name;
         this->damage_reduction = damage_reduction;
         this->durability = durability;
@@ -53,9 +55,10 @@ struct Armor {
         this->weakness2 = WeaponType::None;
         this->resistance1 = WeaponType::None;
         this->resistance2 = WeaponType::None;
+        this->is_unbreakable = is_unbreakable;
     }
 
-    Armor(const std::string &name, const int damage_reduction, const int durability, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2) {
+    Armor(const std::string &name, const int damage_reduction, const int durability, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2,  const bool is_unbreakable) {
         this->name=name;
         this->damage_reduction = damage_reduction;
         this->durability = durability;
@@ -64,10 +67,12 @@ struct Armor {
         this->weakness2 = weakness2;
         this->resistance1 = resistance1;
         this->resistance2 = resistance2;
+        this->is_unbreakable = is_unbreakable;
     }
 
     bool is_broken() const {
-        return current_durability == 0;
+        if (is_unbreakable) return false;
+        return current_durability <= 0;
     }
 };
 
@@ -171,7 +176,7 @@ struct Monster {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-wave_num);
         if (distrib(g)<=effective_hit_rate) {
-            if (!weapon.is_infinite) weapon.current_durability--;
+            if (!weapon.is_infinite && !weapon.is_broken()) weapon.current_durability--;
             int additional_damage = 0;
             if (weapon.type == weakness1) {
                 known_weakness1 = true;
@@ -210,6 +215,30 @@ struct Player {
         this->username = username;
         this->base_hp = 100;
         this->hp_remaining = base_hp;
+    }
+
+    void take_damage(const Monster & monster) {
+        std::uniform_int_distribution<int> distrib(1, 100);
+        int effective_hit_rate = std::min(95, monster.hit_rate);
+        if (distrib(g)<=effective_hit_rate) {
+            if(!current_armor.is_unbreakable && !current_armor.is_broken()) current_armor.current_durability--;
+            int additional_damage = 0;
+            if(!current_armor.is_broken()) {
+                additional_damage-=current_armor.damage_reduction;
+                if (monster.type == current_armor.weakness1) additional_damage += 3;
+                if (monster.type == current_armor.weakness2) additional_damage += 2;
+                if (monster.type == current_armor.resistance1) additional_damage-=2;
+                if (monster.type == current_armor.resistance2) additional_damage-=1;
+            }
+            int damage_dealt = std::max(0, monster.damage + additional_damage);
+            /*if (distrib(g)<=monster.crit_rate) {
+                damage_dealt *= 3;
+                std::cout << "Wow! You did a critical hit! ";
+            }*/
+            std::cout << "You took " << damage_dealt << " damage!" << std::endl;
+            hp_remaining -= damage_dealt;
+        }
+        else std::cout << "The monster missed! Now it's your turn to counterattack!" << std::endl;
     }
 
     bool has_lost() const {
