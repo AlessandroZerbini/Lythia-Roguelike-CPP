@@ -335,6 +335,20 @@ std::vector<Monster> list_of_monsters = {
     {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
 };
 
+std::vector<Armor> list_of_armor = {
+    {"Base armor", 0, 0, 0, true},
+    {"armor 1", 1, 35, 0, false},
+    {"armor 2", 2, 35, 5, false},
+    {"armor 3", 3, 30, 5, false},
+    {"armor 4", 1, 40, 20, false},
+    {"armor 5", 2, 55, 10, false},
+    {"armor 6", 5, 35, 0, false},
+    {"armor 7", 3, 30, 25, false},
+    {"armor 8", 5, 30, 15, false},
+    {"armor 9", 7, 25, 0, false},
+    {"armor 10", 6, 30, 10, false},
+};
+
 int main () {
 
     std::vector<Monster> monsters_of_the_wave;
