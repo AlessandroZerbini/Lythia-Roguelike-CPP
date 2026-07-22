@@ -63,6 +63,13 @@ struct Armor {
         this->is_unbreakable = is_unbreakable;
     }
 
+    void upgrade_armor() {
+        std::uniform_int_distribution<int> distrib(1, 3);
+        if (!is_unbreakable) durability += distrib(g);
+        damage_reduction += distrib(g);
+        evasion += 2*distrib(g);
+    }
+
     Armor(const std::string &name, const int damage_reduction, const int durability, const int evasion, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2,  const bool is_unbreakable) {
         this->name=name;
         this->damage_reduction = damage_reduction;
@@ -238,6 +245,52 @@ struct Monster {
     }
 };
 
+std::vector<Weapon> list_of_weapons = {
+    {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
+    {"Ice magic", WeaponType::Ice, 0, 90, 3, 5, true},
+    {"Fire magic", WeaponType::Fire, 0, 70, 7, 10, true},
+    {"Thunder magic", WeaponType::Thunder, 0, 75, 6, 25, true},
+    {"Wind magic", WeaponType::Wind, 0, 85, 3, 15, true},
+    {"Water magic", WeaponType::Water, 0, 90, 5, 0, true},
+    {"Ground magic", WeaponType::Ground, 0, 70, 8, 0, true},
+    {"Dark magic", WeaponType::Dark, 0, 60, 10, 25, true},
+    {"Light magic", WeaponType::Light, 0, 85, 5, 25, true},
+    {"Magic Sword", WeaponType::Physical, 20, 85, 5, 5, false},
+    {"Dark magic Sword", WeaponType::Dark, 5, 75, 8, 25, false},
+    {"Light magic Sword", WeaponType::Light, 25, 95, 5, 5, false}
+};
+
+std::vector<Monster> list_of_monsters = {
+    {"monster1", 12, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, 10, 5, WeaponType::Physical},
+    {"monster2", 15, WeaponType::Ice, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, 0, 0, WeaponType::Physical},
+    {"monster3", 18, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::None, 5, 75, 0, 10, WeaponType::Ice},
+    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, WeaponType::Wind, WeaponType::Physical, 5, 70, 10, 5, WeaponType::Wind},
+    {"monster5", 14, WeaponType::Light, WeaponType::Dark, WeaponType::None, WeaponType::None, 4, 90, 0, 15, WeaponType::Thunder},
+    {"monster6", 20, WeaponType::Wind, WeaponType::Water, WeaponType::Fire, WeaponType::Ice, 3, 85, 0, 5, WeaponType::Fire},
+    {"monster7", 10, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::Dark, 7, 85, 15, 15, WeaponType::Dark},
+    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, WeaponType::Light, WeaponType::None, 6, 75, 20, 2, WeaponType::Light},
+    {"monster9", 24, WeaponType::None, WeaponType::None, WeaponType::Fire, WeaponType::None, 2, 75, 0, 10, WeaponType::Physical},
+    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, WeaponType::None, WeaponType::None, 5, 80, 0, 5, WeaponType::Ice},
+    {"monster11", 22, WeaponType::Thunder, WeaponType::Ice, WeaponType::Water, WeaponType::Dark, 3, 80, 15, 0, WeaponType::Water},
+    {"monster12", 14, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, 6, 75, 0, 15, WeaponType::Thunder},
+    {"monster13", 18, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
+    {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
+};
+
+std::vector<Armor> list_of_armor = {
+    {"Basic armor", 0, 0, 0, true},
+    {"armor 1", 1, 35, 0, false},
+    {"armor 2", 2, 35, 5, false},
+    {"armor 3", 3, 30, 5, false},
+    {"armor 4", 1, 40, 20, false},
+    {"armor 5", 2, 55, 10, false},
+    {"armor 6", 5, 35, 0, false},
+    {"armor 7", 3, 30, 25, false},
+    {"armor 8", 5, 30, 15, false},
+    {"armor 9", 7, 25, 0, false},
+    {"armor 10", 6, 30, 10, false},
+};
+
 struct Player {
     std::string username;
     int base_hp;
@@ -255,6 +308,10 @@ struct Player {
         this->hp_remaining = base_hp;
         this->strength = 0;
         this->resistance = 0;
+        this->weapons_inventory = {list_of_weapons[0], list_of_weapons[1], list_of_weapons[2]};
+        this->current_weapons = this->weapons_inventory;
+        this->armor_inventory = {list_of_armor[0]};
+        this->current_armor = armor_inventory[0];
     }
 
     void take_damage(const Monster & monster) {
@@ -303,52 +360,6 @@ struct Player {
     }
 };
 
-std::vector<Weapon> list_of_weapons = {
-    {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
-    {"Ice magic", WeaponType::Ice, 0, 90, 3, 5, true},
-    {"Fire magic", WeaponType::Fire, 0, 70, 7, 10, true},
-    {"Thunder magic", WeaponType::Thunder, 0, 75, 6, 25, true},
-    {"Wind magic", WeaponType::Wind, 0, 85, 3, 15, true},
-    {"Water magic", WeaponType::Water, 0, 90, 5, 0, true},
-    {"Ground magic", WeaponType::Ground, 0, 70, 8, 0, true},
-    {"Dark magic", WeaponType::Dark, 0, 60, 10, 25, true},
-    {"Light magic", WeaponType::Light, 0, 85, 5, 25, true},
-    {"Magic Sword", WeaponType::Physical, 20, 85, 5, 5, false},
-    {"Dark magic Sword", WeaponType::Dark, 5, 75, 8, 25, false},
-    {"Light magic Sword", WeaponType::Light, 25, 95, 5, 5, false}
-};
-
-std::vector<Monster> list_of_monsters = {
-    {"monster1", 12, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, 10, 5, WeaponType::Physical},
-    {"monster2", 15, WeaponType::Ice, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, 0, 0, WeaponType::Physical},
-    {"monster3", 18, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::None, 5, 75, 0, 10, WeaponType::Ice},
-    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, WeaponType::Wind, WeaponType::Physical, 5, 70, 10, 5, WeaponType::Wind},
-    {"monster5", 14, WeaponType::Light, WeaponType::Dark, WeaponType::None, WeaponType::None, 4, 90, 0, 15, WeaponType::Thunder},
-    {"monster6", 20, WeaponType::Wind, WeaponType::Water, WeaponType::Fire, WeaponType::Ice, 3, 85, 0, 5, WeaponType::Fire},
-    {"monster7", 10, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::Dark, 7, 85, 15, 15, WeaponType::Dark},
-    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, WeaponType::Light, WeaponType::None, 6, 75, 20, 2, WeaponType::Light},
-    {"monster9", 24, WeaponType::None, WeaponType::None, WeaponType::Fire, WeaponType::None, 2, 75, 0, 10, WeaponType::Physical},
-    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, WeaponType::None, WeaponType::None, 5, 80, 0, 5, WeaponType::Ice},
-    {"monster11", 22, WeaponType::Thunder, WeaponType::Ice, WeaponType::Water, WeaponType::Dark, 3, 80, 15, 0, WeaponType::Water},
-    {"monster12", 14, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, 6, 75, 0, 15, WeaponType::Thunder},
-    {"monster13", 18, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
-    {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
-};
-
-std::vector<Armor> list_of_armor = {
-    {"Base armor", 0, 0, 0, true},
-    {"armor 1", 1, 35, 0, false},
-    {"armor 2", 2, 35, 5, false},
-    {"armor 3", 3, 30, 5, false},
-    {"armor 4", 1, 40, 20, false},
-    {"armor 5", 2, 55, 10, false},
-    {"armor 6", 5, 35, 0, false},
-    {"armor 7", 3, 30, 25, false},
-    {"armor 8", 5, 30, 15, false},
-    {"armor 9", 7, 25, 0, false},
-    {"armor 10", 6, 30, 10, false},
-};
-
 int main () {
 
     std::vector<Monster> monsters_of_the_wave;
@@ -359,7 +370,7 @@ int main () {
     std::getline(std::cin, username);
     Player player (username);
 
-    //std::cout << player.current_armor.name << player.current_weapons[0].name;
+    std::cout << player.current_armor.name << player.current_weapons[0].name;
 
     /*bool want_to_play = true;
     do {
