@@ -336,10 +336,29 @@ std::vector<Monster> list_of_monsters = {
 };
 
 int main () {
+
+    std::vector<Monster> monsters_of_the_wave;
+    for(int i = 0; i<3 ; i++) monsters_of_the_wave.push_back(list_of_monsters[i]);
+
+    std::cout << "Choose your name!" << std::endl;
+    std::string username;
+    std::getline(std::cin, username);
+    Player player (username);
+
+    //std::cout << player.current_armor.name << player.current_weapons[0].name;
+
+    /*bool want_to_play = true;
+    do {
+
+    } while (want_to_play);*/
+
+
     std::cout << "Choose what to do before the next wave starts:" << std::endl <<
                 "1: Upgrade a weapon" << std::endl <<
                 "2: Look for a new item" << std::endl <<
                 "3: Train to increase your health" << std::endl <<
                 "4: Train to increase your strength" << std::endl <<
                 "5: Train to increase your resistance" << std::endl;
+
+
 }
