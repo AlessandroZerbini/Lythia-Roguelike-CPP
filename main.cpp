@@ -30,6 +30,7 @@ struct Armor {
     int damage_reduction;
     int durability;
     int current_durability;
+    int evasion;
     WeaponType weakness1;
     WeaponType weakness2;
     WeaponType resistance1;
@@ -41,6 +42,7 @@ struct Armor {
         this->damage_reduction = 0;
         this->durability = 0;
         this->current_durability=this->durability;
+        this->evasion = 0;
         this->weakness1 = WeaponType::None;
         this->weakness2 = WeaponType::None;
         this->resistance1 = WeaponType::None;
@@ -48,11 +50,12 @@ struct Armor {
         this->is_unbreakable = true;
     }
 
-    Armor(const std::string &name, const int damage_reduction, const int durability, const bool is_unbreakable) {
+    Armor(const std::string &name, const int damage_reduction, const int durability, const int evasion, const bool is_unbreakable) {
         this->name=name;
         this->damage_reduction = damage_reduction;
         this->durability = durability;
         this->current_durability=this->durability;
+        this->evasion = evasion;
         this->weakness1 = WeaponType::None;
         this->weakness2 = WeaponType::None;
         this->resistance1 = WeaponType::None;
@@ -60,11 +63,12 @@ struct Armor {
         this->is_unbreakable = is_unbreakable;
     }
 
-    Armor(const std::string &name, const int damage_reduction, const int durability, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2,  const bool is_unbreakable) {
+    Armor(const std::string &name, const int damage_reduction, const int durability, const int evasion, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2,  const bool is_unbreakable) {
         this->name=name;
         this->damage_reduction = damage_reduction;
         this->durability = durability;
         this->current_durability=this->durability;
+        this->evasion = evasion;
         this->weakness1 = weakness1;
         this->weakness2 = weakness2;
         this->resistance1 = resistance1;
@@ -250,7 +254,7 @@ struct Player {
 
     void take_damage(const Monster & monster) {
         std::uniform_int_distribution<int> distrib(1, 100);
-        int effective_hit_rate = std::min(95, monster.hit_rate);
+        int effective_hit_rate = std::min(95, monster.hit_rate-current_armor.evasion);
         if (distrib(g)<=effective_hit_rate) {
             if(!current_armor.is_unbreakable && !current_armor.is_broken()) current_armor.current_durability--;
             int additional_damage = 0;
