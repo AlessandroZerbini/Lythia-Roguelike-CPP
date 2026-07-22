@@ -10,8 +10,6 @@
 std::random_device rd;
 std::mt19937 g(rd());
 
-//aggiungere ai mostri un crit rate e un evasion rate, evasion all'armor
-
 enum class WeaponType {
     Physical,
     Ice,
@@ -336,10 +334,10 @@ struct Player {
             std::cout << "You took " << damage_dealt << " damage!" << std::endl;
             hp_remaining -= damage_dealt;
         }
-        else std::cout << "The monster missed! Now it's your turn to counterattack!" << std::endl;
+        else std::cout << "The monster missed! It's now your turn to counterattack!" << std::endl;
     }
 
-    void upgrade_healt() {
+    void upgrade_health() {
         std::uniform_int_distribution<int> distrib(1, 3);
         base_hp += 10*distrib(g);
         hp_remaining = base_hp;
@@ -360,17 +358,47 @@ struct Player {
     }
 };
 
-int main () {
+bool start_wave (Player & player, const int wave_num) {
 
     std::vector<Monster> monsters_of_the_wave;
-    for(int i = 0; i<3 ; i++) monsters_of_the_wave.push_back(list_of_monsters[i]);
 
+    for(int i = 0; i < 3+wave_num; i++) {
+        if (i<list_of_monsters.size()) monsters_of_the_wave.push_back(list_of_monsters[i]);
+    }
+
+    for (int i=0; i < monsters_of_the_wave.size(); i++) monsters_of_the_wave[i].upgrade_monster(wave_num);
+
+    for(int i = 0; i < 3 + wave_num*2; i++) {
+        std::uniform_int_distribution<int> distrib(1, static_cast<int>(monsters_of_the_wave.size()));
+        Monster monster = monsters_of_the_wave[distrib(g)-1];
+        std::cout << std::endl << monster.name << " has appeared!" << std::endl;
+        do {
+            std::cout << "Which weapon do you want to use? ";
+            std::string weapon_chosen;
+            std::getline(std::cin, weapon_chosen);
+            monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
+
+            if (!monster.is_dead()) {
+                std::cout << monster.name << " is going to attack you!" << std::endl;
+                player.take_damage(monster);
+            }
+            else std::cout << "You killed " << monster.name << "!" << std::endl;
+        }while (!player.has_lost() && !monster.is_dead());
+        if (player.has_lost()) return false;
+    }
+    return true;
+}
+
+int main () {
     std::cout << "Choose your name!" << std::endl;
     std::string username;
     std::getline(std::cin, username);
     Player player (username);
+    int wave_num = 0;
 
-    std::cout << player.current_armor.name << player.current_weapons[0].name;
+    bool wave_completed = start_wave(player, wave_num);
+    if (wave_completed) std::cout << std::endl << "You completed the wave number " << wave_num+1 << "!" << std::endl << std::endl;
+    else std::cout << std::endl << "You lost..." << std::endl;
 
     /*bool want_to_play = true;
     do {
@@ -379,7 +407,7 @@ int main () {
 
 
     std::cout << "Choose what to do before the next wave starts:" << std::endl <<
-                "1: Upgrade a weapon" << std::endl <<
+                "1: Upgrade an item" << std::endl <<
                 "2: Look for a new item" << std::endl <<
                 "3: Train to increase your health" << std::endl <<
                 "4: Train to increase your strength" << std::endl <<
