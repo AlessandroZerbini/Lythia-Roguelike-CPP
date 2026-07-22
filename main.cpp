@@ -290,7 +290,7 @@ struct Player {
 
     void upgrade_strength() {
         std::uniform_int_distribution<int> distrib(1, 3);
-        strength += distrib(g);
+        strength += 2*distrib(g);
     }
 
     void upgrade_resistance() {
