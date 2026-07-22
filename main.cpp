@@ -282,6 +282,22 @@ struct Player {
         else std::cout << "The monster missed! Now it's your turn to counterattack!" << std::endl;
     }
 
+    void upgrade_healt() {
+        std::uniform_int_distribution<int> distrib(1, 3);
+        base_hp += 10*distrib(g);
+        hp_remaining = base_hp;
+    }
+
+    void upgrade_strength() {
+        std::uniform_int_distribution<int> distrib(1, 3);
+        strength += distrib(g);
+    }
+
+    void upgrade_resistance() {
+        std::uniform_int_distribution<int> distrib(1, 3);
+        resistance += distrib(g);
+    }
+
     bool has_lost() const {
         return hp_remaining <= 0;
     }
