@@ -265,12 +265,12 @@ struct Player {
             int additional_damage = 0;
             if(!current_armor.is_broken()) {
                 additional_damage-=current_armor.damage_reduction;
-                additional_damage-=resistance;
                 if (monster.type == current_armor.weakness1) additional_damage += 3;
                 if (monster.type == current_armor.weakness2) additional_damage += 2;
                 if (monster.type == current_armor.resistance1) additional_damage-=2;
                 if (monster.type == current_armor.resistance2) additional_damage-=1;
             }
+            additional_damage-=resistance;
             int damage_dealt = std::max(0, monster.damage + additional_damage);
             if (distrib(g)<=monster.crit_rate) {
                 damage_dealt *= 3;
