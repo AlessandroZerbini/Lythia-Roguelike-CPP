@@ -199,12 +199,13 @@ struct Monster {
         return 0;
     }
 
-    void take_damage (Weapon & weapon) {
+    void take_damage (Weapon & weapon, const int player_strength) {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
         if (distrib(g)<=effective_hit_rate) {
             if (!weapon.is_infinite && !weapon.is_broken()) weapon.current_durability--;
             int additional_damage = 0;
+            if(weapon.type == WeaponType::Physical) additional_damage += player_strength;
             if (weapon.type == weakness1) {
                 known_weakness1 = true;
                 additional_damage += 3;
@@ -241,6 +242,8 @@ struct Player {
     std::string username;
     int base_hp;
     int hp_remaining;
+    int strength;
+    int resistance;
     std::vector<Weapon> weapons_inventory;
     std::vector<Armor> armor_inventory;
     std::vector<Weapon> current_weapons;
@@ -250,6 +253,8 @@ struct Player {
         this->username = username;
         this->base_hp = 100;
         this->hp_remaining = base_hp;
+        this->strength = 0;
+        this->resistance = 0;
     }
 
     void take_damage(const Monster & monster) {
@@ -260,6 +265,7 @@ struct Player {
             int additional_damage = 0;
             if(!current_armor.is_broken()) {
                 additional_damage-=current_armor.damage_reduction;
+                additional_damage-=resistance;
                 if (monster.type == current_armor.weakness1) additional_damage += 3;
                 if (monster.type == current_armor.weakness2) additional_damage += 2;
                 if (monster.type == current_armor.resistance1) additional_damage-=2;
@@ -312,3 +318,12 @@ std::vector<Monster> list_of_monsters = {
     {"monster13", 18, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
     {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
 };
+
+int main () {
+    std::cout << "Choose what to do before the next wave starts:" << std::endl <<
+                "1: Upgrade a weapon" << std::endl <<
+                "2: Look for a new item" << std::endl <<
+                "3: Train to increase your health" << std::endl <<
+                "4: Train to increase your strength" << std::endl <<
+                "5: Train to increase your resistance" << std::endl;
+}
