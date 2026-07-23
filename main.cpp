@@ -204,7 +204,7 @@ struct Monster {
         return 0;
     }
 
-    void take_damage (Weapon & weapon, const int player_strength) {
+    bool take_damage (Weapon & weapon, const int player_strength) {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
         if (distrib(g)<=effective_hit_rate) {
@@ -234,8 +234,10 @@ struct Monster {
             }
             std::cout << this->name << " took " << damage_dealt << " damage!" << std::endl;
             hp_remaining -= damage_dealt;
+            return true;
         }
         else std::cout << "Oh no, you missed!" << std::endl;
+        return false;
     }
 
     bool is_dead() const {
@@ -387,17 +389,51 @@ void print_weapons_inventory (const Player & player) {
     std::cout << std::string(100, '-') << std::endl;
 
     for (int i=0; i<player.weapons_inventory.size(); i++) {
-        
+        std::string durability = std::to_string(player.weapons_inventory[i].durability);
+        if (player.weapons_inventory[i].is_infinite) durability = "infinite";
         std::cout << std::setw(10) << i+1
                   << std::setw(15) << player.weapons_inventory[i].name
                   << std::setw(15) << player.weapons_inventory[i].damage
                   << std::setw(15) << player.weapons_inventory[i].hit_rate
-                  << std::setw(15) << player.weapons_inventory[i].crit_rate;
+                  << std::setw(15) << player.weapons_inventory[i].crit_rate
+                  << std::setw(15) << durability
+                  << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
+        if (i!=player.weapons_inventory.size()-1) std::cout << std::string(100, '-') << std::endl;
+        else std::cout << std::endl;
+    }
+    std::cout << std::string(100, '*') << std::endl;
+}
 
-        if(player.weapons_inventory[i].is_infinite) std::cout << std::setw(15) << "infinite";
-        else std::cout << std::setw(15) << player.weapons_inventory[i].durability;
+void print_current_weapons (const Player & player, const Monster & monster) {
+    std::cout << std::string(100, '*') << std::endl;
+    std::cout << std::left
+              << std::setw(10) << "Number"
+              << std::setw(15) << "Name"
+              << std::setw(15) << "Damage"
+              << std::setw(15) << "Precision"
+              << std::setw(15) << "Criticals %"
+              << std::setw(15) << "Durability"
+              << std::setw(15) << "Type" << std::endl;
+    std::cout << std::string(100, '-') << std::endl;
 
-        std::cout << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
+    for (int i=0; i<player.current_weapons.size(); i++) {
+        std::string durability = std::to_string(player.current_weapons[i].current_durability);
+        if (player.weapons_inventory[i].is_infinite) durability = "infinite";
+        int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-monster.evasion_rate);
+        int damage = player.current_weapons[i].damage;
+        if(monster.known_resistance1 && player.current_weapons[i].type == monster.resistance1) damage -= 2;
+        if(monster.known_resistance2 && player.current_weapons[i].type == monster.resistance2) damage -= 1;
+        if(monster.known_weakness1 && player.current_weapons[i].type == monster.weakness1) damage += 3;
+        if(monster.known_weakness2 && player.current_weapons[i].type == monster.weakness2) damage += 2;
+        if(player.current_weapons[i].type == WeaponType::Physical) damage += player.strength;
+        damage = std::max (0, damage);
+        std::cout << std::setw(10) << i+1
+                  << std::setw(15) << player.current_weapons[i].name
+                  << std::setw(15) << damage
+                  << std::setw(15) << effective_hit_rate
+                  << std::setw(15) << player.weapons_inventory[i].crit_rate
+                  << std::setw(15) << durability
+                  << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
         if (i!=player.weapons_inventory.size()-1) std::cout << std::string(100, '-') << std::endl;
         else std::cout << std::endl;
     }
@@ -416,13 +452,21 @@ bool start_wave (Player & player, const int wave_num) {
 
     for(int i = 0; i < 3 + wave_num*2; i++) {
         std::uniform_int_distribution<int> distrib(1, static_cast<int>(monsters_of_the_wave.size()));
-        Monster monster = monsters_of_the_wave[distrib(g)-1];
+        int index_monster = distrib(g)-1;
+        Monster monster = monsters_of_the_wave[index_monster];
         std::cout << std::endl << monster.name << " has appeared!" << std::endl;
         do {
+            print_current_weapons(player, monster);
             std::cout << "Which weapon do you want to use? ";
             std::string weapon_chosen;
             std::getline(std::cin, weapon_chosen);
-            monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
+            bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
+            if(hit) {
+                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].weakness1) monsters_of_the_wave[index_monster].known_weakness1 = true;
+                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].weakness2) monsters_of_the_wave[index_monster].known_weakness2 = true;
+                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].resistance1) monsters_of_the_wave[index_monster].known_resistance1 = true;
+                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].resistance2) monsters_of_the_wave[index_monster].known_resistance2 = true;
+            }
 
             if (!monster.is_dead()) {
                 std::cout << monster.name << " is going to attack you!" << std::endl;
