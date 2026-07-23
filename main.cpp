@@ -360,6 +360,33 @@ struct Player {
     }
 };
 
+#ifdef _WIN32
+#include <windows.h>
+
+void enable_ansi() {
+    HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hOut == INVALID_HANDLE_VALUE) return;
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hOut, &dwMode)) return;
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    SetConsoleMode(hOut, dwMode);
+}
+#else
+void enable_ansi() {}
+#endif
+
+void wait() {
+    std::cout << "Press Enter to continue" << std::endl;
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+}
+
+void clear_screen () {
+    // \033[2J = clears visible buffer
+    // \033[1;1H = move the cursor to top-left
+    // \033[3J -> deletes all scrollback buffer
+    std::cout << "\033[H\033[2J\033[3J";
+}
+
 std::string type_to_string (const WeaponType type){
     switch (type) {
         case WeaponType::Physical: return "Physical";
@@ -431,10 +458,10 @@ void print_current_weapons (const Player & player, const Monster & monster) {
                   << std::setw(15) << player.current_weapons[i].name
                   << std::setw(15) << damage
                   << std::setw(15) << effective_hit_rate
-                  << std::setw(15) << player.weapons_inventory[i].crit_rate
+                  << std::setw(15) << player.current_weapons[i].crit_rate
                   << std::setw(15) << durability
-                  << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
-        if (i!=player.weapons_inventory.size()-1) std::cout << std::string(100, '-') << std::endl;
+                  << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
+        if (i!=player.current_weapons.size()-1) std::cout << std::string(100, '-') << std::endl;
         else std::cout << std::endl;
     }
     std::cout << std::string(100, '*') << std::endl;
@@ -451,13 +478,15 @@ bool start_wave (Player & player, const int wave_num) {
     for (int i=0; i < monsters_of_the_wave.size(); i++) monsters_of_the_wave[i].upgrade_monster(wave_num);
 
     for(int i = 0; i < 3 + wave_num*2; i++) {
+        clear_screen();
         std::uniform_int_distribution<int> distrib(1, static_cast<int>(monsters_of_the_wave.size()));
         int index_monster = distrib(g)-1;
         Monster monster = monsters_of_the_wave[index_monster];
         std::cout << std::endl << monster.name << " has appeared!" << std::endl;
+        wait();
         do {
             print_current_weapons(player, monster);
-            std::cout << "Which weapon do you want to use? ";
+            std::cout << "Which weapon do you want to use?" << std::endl;
             std::string weapon_chosen;
             std::getline(std::cin, weapon_chosen);
             bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
@@ -467,12 +496,15 @@ bool start_wave (Player & player, const int wave_num) {
                 if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].resistance1) monsters_of_the_wave[index_monster].known_resistance1 = true;
                 if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].resistance2) monsters_of_the_wave[index_monster].known_resistance2 = true;
             }
+            wait();
 
             if (!monster.is_dead()) {
                 std::cout << monster.name << " is going to attack you!" << std::endl;
                 player.take_damage(monster);
             }
             else std::cout << "You killed " << monster.name << "!" << std::endl;
+            wait();
+            clear_screen();
         }while (!player.has_lost() && !monster.is_dead());
         if (player.has_lost()) return false;
     }
@@ -480,11 +512,14 @@ bool start_wave (Player & player, const int wave_num) {
 }
 
 int main () {
+    enable_ansi();
     std::cout << "Choose your name!" << std::endl;
     std::string username;
     std::getline(std::cin, username);
     Player player (username);
     print_weapons_inventory(player);
+    wait();
+    clear_screen();
     int wave_num = 0;
 
     bool wave_completed = start_wave(player, wave_num);
