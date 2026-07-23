@@ -358,6 +358,52 @@ struct Player {
     }
 };
 
+std::string type_to_string (const WeaponType type){
+    switch (type) {
+        case WeaponType::Physical: return "Physical";
+        case WeaponType::Ice: return "Ice";
+        case WeaponType::Fire: return "Fire";
+        case WeaponType::Thunder: return "Thunder";
+        case WeaponType::Wind: return "Wind";
+        case WeaponType::Water: return "Water";
+        case WeaponType::Ground: return "Ground";
+        case WeaponType::Dark: return "Dark";
+        case WeaponType::Light: return "Light";
+        case WeaponType::None: return "None";
+        default: return "Unknown";
+    }
+}
+
+void print_weapons_inventory (const Player & player) {
+    std::cout << std::string(100, '*') << std::endl;
+    std::cout << std::left
+              << std::setw(10) << "Number"
+              << std::setw(15) << "Name"
+              << std::setw(15) << "Strength"
+              << std::setw(15) << "Precision"
+              << std::setw(15) << "Criticals %"
+              << std::setw(15) << "Durability"
+              << std::setw(15) << "Type" << std::endl;
+    std::cout << std::string(100, '-') << std::endl;
+
+    for (int i=0; i<player.weapons_inventory.size(); i++) {
+        
+        std::cout << std::setw(10) << i+1
+                  << std::setw(15) << player.weapons_inventory[i].name
+                  << std::setw(15) << player.weapons_inventory[i].damage
+                  << std::setw(15) << player.weapons_inventory[i].hit_rate
+                  << std::setw(15) << player.weapons_inventory[i].crit_rate;
+
+        if(player.weapons_inventory[i].is_infinite) std::cout << std::setw(15) << "infinite";
+        else std::cout << std::setw(15) << player.weapons_inventory[i].durability;
+
+        std::cout << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
+        if (i!=player.weapons_inventory.size()-1) std::cout << std::string(100, '-') << std::endl;
+        else std::cout << std::endl;
+    }
+    std::cout << std::string(100, '*') << std::endl;
+}
+
 bool start_wave (Player & player, const int wave_num) {
 
     std::vector<Monster> monsters_of_the_wave;
@@ -394,6 +440,7 @@ int main () {
     std::string username;
     std::getline(std::cin, username);
     Player player (username);
+    print_weapons_inventory(player);
     int wave_num = 0;
 
     bool wave_completed = start_wave(player, wave_num);
