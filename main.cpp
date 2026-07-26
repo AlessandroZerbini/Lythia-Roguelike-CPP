@@ -477,7 +477,7 @@ void print_current_weapons (const Player & player, const Monster & monster) {
 
     for (int i=0; i<player.current_weapons.size(); i++) {
         std::string durability = std::to_string(player.current_weapons[i].current_durability);
-        if (player.weapons_inventory[i].is_infinite) durability = "infinite";
+        if (player.current_weapons[i].is_infinite) durability = "infinite";
         int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-monster.evasion_rate);
         int damage = player.current_weapons[i].damage;
         if(monster.known_resistance1 && player.current_weapons[i].type == monster.resistance1) damage -= 2;
