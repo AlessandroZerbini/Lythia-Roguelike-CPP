@@ -404,44 +404,76 @@ std::string type_to_string (const WeaponType type){
 }
 
 void print_weapons_inventory (const Player & player) {
-    std::cout << std::string(100, '*') << std::endl;
+    std::cout << std::string(105, '*') << std::endl;
     std::cout << std::left
               << std::setw(10) << "Number"
-              << std::setw(15) << "Name"
+              << std::setw(20) << "Name"
               << std::setw(15) << "Strength"
               << std::setw(15) << "Precision"
               << std::setw(15) << "Criticals %"
               << std::setw(15) << "Durability"
               << std::setw(15) << "Type" << std::endl;
-    std::cout << std::string(100, '-') << std::endl;
+    std::cout << std::string(105, '-') << std::endl;
 
     for (int i=0; i<player.weapons_inventory.size(); i++) {
         std::string durability = std::to_string(player.weapons_inventory[i].durability);
         if (player.weapons_inventory[i].is_infinite) durability = "infinite";
         std::cout << std::setw(10) << i+1
-                  << std::setw(15) << player.weapons_inventory[i].name
+                  << std::setw(20) << player.weapons_inventory[i].name
                   << std::setw(15) << player.weapons_inventory[i].damage
                   << std::setw(15) << player.weapons_inventory[i].hit_rate
                   << std::setw(15) << player.weapons_inventory[i].crit_rate
                   << std::setw(15) << durability
                   << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
-        if (i!=player.weapons_inventory.size()-1) std::cout << std::string(100, '-') << std::endl;
+        if (i!=player.weapons_inventory.size()-1) std::cout << std::string(105, '-') << std::endl;
         else std::cout << std::endl;
     }
-    std::cout << std::string(100, '*') << std::endl;
+    std::cout << std::string(105, '*') << std::endl;
+}
+
+void print_armor_inventory (const Player & player) {
+    std::cout << std::string(135, '*') << std::endl;
+    std::cout << std::left
+              << std::setw(10) << "Number"
+              << std::setw(20) << "Name"
+              << std::setw(15) << "Defense"
+              << std::setw(15) << "Durability"
+              << std::setw(15) << "Evasion"
+              << std::setw(15) << "Weakness 1"
+              << std::setw(15) << "Weakness 2"
+              << std::setw(15) << "Resistance 1"
+              << std::setw(15) << "Resistance 2" << std::endl;
+    std::cout << std::string(130, '-') << std::endl;
+
+    for (int i=0; i<player.armor_inventory.size(); i++) {
+        std::string durability = std::to_string(player.armor_inventory[i].durability);
+        if (player.armor_inventory[i].is_unbreakable) durability = "infinite";
+        std::cout << std::setw(10) << i+1
+                  << std::setw(20) << player.armor_inventory[i].name
+                  << std::setw(15) << player.armor_inventory[i].damage_reduction
+                  << std::setw(15) << durability
+                  << std::setw(15) << player.armor_inventory[i].evasion
+                  << std::setw(15) << type_to_string(player.armor_inventory[i].weakness1)
+                  << std::setw(15) << type_to_string(player.armor_inventory[i].weakness2)
+                  << std::setw(15) << type_to_string(player.armor_inventory[i].resistance1)
+                  << std::setw(15) << type_to_string(player.armor_inventory[i].resistance2) << std::endl;
+        if (i!=player.armor_inventory.size()-1) std::cout << std::string(135, '-') << std::endl;
+        else std::cout << std::endl;
+    }
+    std::cout << std::string(135, '*') << std::endl;
 }
 
 void print_current_weapons (const Player & player, const Monster & monster) {
-    std::cout << std::string(100, '*') << std::endl;
+    std::cout << std::string(105, '*') << std::endl;
     std::cout << std::left
               << std::setw(10) << "Number"
-              << std::setw(15) << "Name"
+              << std::setw(20) << "Name"
               << std::setw(15) << "Damage"
               << std::setw(15) << "Precision"
               << std::setw(15) << "Criticals %"
               << std::setw(15) << "Durability"
               << std::setw(15) << "Type" << std::endl;
-    std::cout << std::string(100, '-') << std::endl;
+    std::cout << std::string(105, '-') << std::endl;
 
     for (int i=0; i<player.current_weapons.size(); i++) {
         std::string durability = std::to_string(player.current_weapons[i].current_durability);
@@ -455,17 +487,37 @@ void print_current_weapons (const Player & player, const Monster & monster) {
         if(player.current_weapons[i].type == WeaponType::Physical) damage += player.strength;
         damage = std::max (0, damage);
         std::cout << std::setw(10) << i+1
-                  << std::setw(15) << player.current_weapons[i].name
+                  << std::setw(20) << player.current_weapons[i].name
                   << std::setw(15) << damage
                   << std::setw(15) << effective_hit_rate
                   << std::setw(15) << player.current_weapons[i].crit_rate
                   << std::setw(15) << durability
                   << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
-        if (i!=player.current_weapons.size()-1) std::cout << std::string(100, '-') << std::endl;
+        if (i!=player.current_weapons.size()-1) std::cout << std::string(105, '-') << std::endl;
         else std::cout << std::endl;
     }
-    std::cout << std::string(100, '*') << std::endl;
+    std::cout << std::string(105, '*') << std::endl;
 }
+
+void update_weaknesses (const Weapon & weapon, Monster & monster, std::vector<Monster> & monsters_of_the_wave, int index_monster) {
+    if(weapon.type == monsters_of_the_wave[index_monster].weakness1) {
+        monsters_of_the_wave[index_monster].known_weakness1 = true;
+        monster.known_weakness1 = true;
+    }
+    if(weapon.type == monsters_of_the_wave[index_monster].weakness2) {
+        monsters_of_the_wave[index_monster].known_weakness2 = true;
+        monster.known_weakness2 = true;
+    }
+    if(weapon.type == monsters_of_the_wave[index_monster].resistance1) {
+        monsters_of_the_wave[index_monster].known_resistance1 = true;
+        monster.known_resistance1 = true;
+    }
+    if(weapon.type == monsters_of_the_wave[index_monster].resistance2) {
+        monsters_of_the_wave[index_monster].known_resistance2 = true;
+        monster.known_resistance2 = true;
+    }
+}
+
 
 bool start_wave (Player & player, const int wave_num) {
 
@@ -490,12 +542,7 @@ bool start_wave (Player & player, const int wave_num) {
             std::string weapon_chosen;
             std::getline(std::cin, weapon_chosen);
             bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) {
-                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].weakness1) monsters_of_the_wave[index_monster].known_weakness1 = true;
-                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].weakness2) monsters_of_the_wave[index_monster].known_weakness2 = true;
-                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].resistance1) monsters_of_the_wave[index_monster].known_resistance1 = true;
-                if(player.current_weapons[stoi(weapon_chosen)-1].type == monsters_of_the_wave[index_monster].resistance2) monsters_of_the_wave[index_monster].known_resistance2 = true;
-            }
+            if(hit) update_weaknesses(player.current_weapons[stoi(weapon_chosen)-1], monster, monsters_of_the_wave, index_monster);
             wait();
 
             if (!monster.is_dead()) {
@@ -511,13 +558,137 @@ bool start_wave (Player & player, const int wave_num) {
     return true;
 }
 
+void update_current_equipment(Player & player) {
+    for (int i = 0; i < player.current_weapons.size(); i++) {
+        for (int j = 0; j < player.weapons_inventory.size(); j++) {
+            if (player.current_weapons[i].name == player.weapons_inventory[j].name) {
+                player.current_weapons[i]=player.weapons_inventory[j];
+            }
+        }
+    }
+    for (int i = 0; i < player.armor_inventory.size(); i++) {
+        if (player.current_armor.name == player.armor_inventory[i].name) {
+            player.current_armor = player.armor_inventory[i];
+        }
+    }
+}
+
+void exclude_weapons (const Player & player, std::vector<Weapon> & available_weapons) {
+    std::vector<int> index;
+    for (int i = 0; i < player.weapons_inventory.size(); i++) {
+        for (int j = 0; j < available_weapons.size(); j++) {
+            if (player.weapons_inventory[i].name == available_weapons[j].name) index.push_back(j);
+        }
+    }
+    int weapons_excluded = 0;
+    for (int i = 0; i < index.size(); i++) {
+        available_weapons.erase(available_weapons.begin()+index[i]-weapons_excluded);
+        weapons_excluded++;
+    }
+}
+
+
+void exclude_armor (const Player & player, std::vector<Armor> & available_armor) {
+    std::vector<int> index;
+    for (int i = 0; i < player.armor_inventory.size(); i++) {
+        for (int j = 0; j < available_armor.size(); j++) {
+            if (player.armor_inventory[i].name == available_armor[j].name) index.push_back(j);
+        }
+    }
+    int armors_excluded = 0;
+    for (int i = 0; i < index.size(); i++) {
+        available_armor.erase(available_armor.begin()+index[i]-armors_excluded);
+        armors_excluded++;
+    }
+}
+
+bool boost(Player & player, int choice) {
+    switch (choice) {
+        case 1: {
+            std::string item_choice;
+            std::cout << "What do you want to upgrade? " << std::endl << "1: Weapons, 2: Armors" << std::endl;
+            std::getline (std::cin, item_choice);
+            if (item_choice == "1") {
+                print_weapons_inventory(player);
+                std::cout << "Which weapon do you want to upgrade?" << std::endl;
+                std::getline (std::cin, item_choice);
+                player.weapons_inventory[stoi(item_choice)-1].upgrade_weapon();
+            }
+            if (item_choice == "2") {
+                print_armor_inventory(player);
+                std::cout << "Which armor do you want to upgrade?" << std::endl;
+                std::getline (std::cin, item_choice);
+                player.armor_inventory[stoi(item_choice)-1].upgrade_armor();
+            }
+            update_current_equipment(player);
+            return true;
+        }
+        case 2: {
+            std::vector<Weapon> available_weapons = list_of_weapons;
+            std::vector<Armor> available_armor = list_of_armor;
+            exclude_weapons (player, available_weapons);
+            exclude_armor (player, available_armor);
+            if (!available_weapons.empty() && !available_armor.empty()) {
+                std::uniform_int_distribution<int> distrib(1, 2);
+                int random_choice = distrib(g);
+                if (random_choice == 1) {
+                    std::uniform_int_distribution<int> distribution(1, static_cast<int>(available_weapons.size()));
+                    player.weapons_inventory.push_back(available_weapons[distribution(g)-1]);
+                    std::cout << "You obtained " << player.weapons_inventory.back().name << "!" << std::endl;
+                }
+                if (random_choice == 2) {
+                    std::uniform_int_distribution<int> distribution(1, static_cast<int>(available_armor.size()));
+                    player.armor_inventory.push_back(available_armor[distribution(g)-1]);
+                    std::cout << "You obtained " << player.armor_inventory.back().name << "!" << std::endl;
+                }
+                return true;
+            }
+            else if (!available_weapons.empty()) {
+                std::uniform_int_distribution<int> distribution(1, static_cast<int>(available_weapons.size()));
+                player.weapons_inventory.push_back(available_weapons[distribution(g)-1]);
+                std::cout << "You obtained " << player.weapons_inventory.back().name << "!" << std::endl;
+                return true;
+            }
+            else if (!available_armor.empty()) {
+                std::uniform_int_distribution<int> distribution(1, static_cast<int>(available_armor.size()));
+                player.armor_inventory.push_back(available_armor[distribution(g)-1]);
+                std::cout << "You obtained " << player.armor_inventory.back().name << "!" << std::endl;
+                return true;
+            }
+            std::cout << "There no more are available items, change your choice" << std::endl;
+            return false;
+        }
+        case 3: player.upgrade_health();
+                return true;
+        case 4: player.upgrade_strength();
+                return true;
+        case 5: player.upgrade_resistance();
+                return true;
+        default: return false;
+    }
+}
+
+void boost_player (Player & player) {
+    std::cout << "Choose what to do before the next wave starts:" << std::endl <<
+                "1: Upgrade an item" << std::endl <<
+                "2: Look for a new item" << std::endl <<
+                "3: Train to increase your health" << std::endl <<
+                "4: Train to increase your strength" << std::endl <<
+                "5: Train to increase your resistance" << std::endl;
+    std::string choice;
+    std::getline(std::cin, choice);
+    if (!boost(player, stoi(choice))) boost_player(player);
+}
+
 int main () {
     enable_ansi();
     std::cout << "Choose your name!" << std::endl;
     std::string username;
     std::getline(std::cin, username);
     Player player (username);
+    for (int i = 0; i < 3; i++) boost_player (player);
     print_weapons_inventory(player);
+    print_armor_inventory(player);
     wait();
     clear_screen();
     int wave_num = 0;
@@ -525,19 +696,5 @@ int main () {
     bool wave_completed = start_wave(player, wave_num);
     if (wave_completed) std::cout << std::endl << "You completed the wave number " << wave_num+1 << "!" << std::endl << std::endl;
     else std::cout << std::endl << "You lost..." << std::endl;
-
-    /*bool want_to_play = true;
-    do {
-
-    } while (want_to_play);*/
-
-
-    std::cout << "Choose what to do before the next wave starts:" << std::endl <<
-                "1: Upgrade an item" << std::endl <<
-                "2: Look for a new item" << std::endl <<
-                "3: Train to increase your health" << std::endl <<
-                "4: Train to increase your strength" << std::endl <<
-                "5: Train to increase your resistance" << std::endl;
-
 
 }
