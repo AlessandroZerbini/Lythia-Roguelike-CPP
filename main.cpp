@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <random>
 #include <iomanip> //to manipulate output formatting
+#include <limits>
 
 std::random_device rd;
 std::mt19937 g(rd());
@@ -63,7 +64,10 @@ struct Armor {
 
     void upgrade_armor() {
         std::uniform_int_distribution<int> distrib(1, 3);
-        if (!is_unbreakable) durability += distrib(g);
+        if (!is_unbreakable) {
+            durability += distrib(g);
+            current_durability = durability;
+        }
         damage_reduction += distrib(g);
         evasion += 2*distrib(g);
     }
@@ -126,7 +130,10 @@ struct Weapon {
 
     void upgrade_weapon() {
         std::uniform_int_distribution<int> distrib(1, 3);
-        if (!is_infinite) durability += distrib(g);
+        if (!is_infinite) {
+            durability += distrib(g);
+            current_durability = durability;
+        }
         damage += distrib(g);
         hit_rate += 2*distrib(g);
     }
@@ -197,13 +204,6 @@ struct Monster {
         this->crit_rate += wave_num;
     }
 
-    int known_weaknesses() const {
-        if (known_weakness1 && known_weakness2) return 3;
-        if (known_weakness2) return 2;
-        if (known_weakness1) return 1;
-        return 0;
-    }
-
     bool take_damage (Weapon & weapon, const int player_strength) {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
@@ -245,6 +245,104 @@ struct Monster {
     }
 };
 
+struct Boss : Monster {
+
+    WeaponType resistance3;
+    bool known_resistance3;
+
+    Boss() {
+        this->name = "Unknown";
+        this->base_hp = 0;
+        this->hp_remaining = base_hp;
+        this->weakness1 = WeaponType::None;
+        this->weakness2 = WeaponType::None;
+        this->known_weakness1 = false;
+        this->known_weakness2 = false;
+        this->resistance1 = WeaponType::None;
+        this->resistance2 = WeaponType::None;
+        this->resistance3 = WeaponType::None;
+        this->known_resistance1 = false;
+        this->known_resistance2 = false;
+        this->known_resistance3 = false;
+        this->damage = 0;
+        this->hit_rate = 0;
+        this->evasion_rate = 0;
+        this->crit_rate = 0;
+        this->type = WeaponType::None;
+    }
+
+    Boss(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2, const WeaponType resistance3, const int damage, const int hit_rate, const int evasion_rate, const int crit_rate, const WeaponType type) {
+        this->name = name;
+        this->base_hp = base_hp;
+        this->hp_remaining = base_hp;
+        this->weakness1 = weakness1;
+        this->weakness2 = weakness2;
+        this->known_weakness1 = false;
+        this->known_weakness2 = false;
+        this->resistance1 = resistance1;
+        this->resistance2 = resistance2;
+        this->resistance3 = resistance3;
+        this->known_resistance1 = false;
+        this->known_resistance2 = false;
+        this->known_resistance3 = false;
+        this->damage = damage;
+        this->hit_rate = hit_rate;
+        this->evasion_rate = evasion_rate;
+        this->crit_rate = crit_rate;
+        this->type = type;
+    }
+
+    void upgrade_monster(const int wave_num) {
+        this->base_hp += 5*wave_num;
+        this->hp_remaining = this->base_hp;
+        this->damage += 3*wave_num;
+        this->hit_rate += 2*wave_num;
+        this->evasion_rate += 2*wave_num;
+        this->crit_rate += 3*wave_num;
+    }
+
+    bool take_damage (Weapon & weapon, const int player_strength) {
+        std::uniform_int_distribution<int> distrib(1, 100);
+        int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
+        if (distrib(g)<=effective_hit_rate) {
+            if (!weapon.is_infinite && !weapon.is_broken()) weapon.current_durability--;
+            int additional_damage = 0;
+            if(weapon.type == WeaponType::Physical) additional_damage += player_strength;
+            if (weapon.type == weakness1) {
+                known_weakness1 = true;
+                additional_damage += 2;
+            }
+            if (weapon.type == weakness2) {
+                known_weakness2 = true;
+                additional_damage += 1;
+            }
+            if (weapon.type == resistance1) {
+                known_resistance1 = true;
+                additional_damage -= 3;
+            }
+            if (weapon.type == resistance2) {
+                known_resistance2 = true;
+                additional_damage -= 2;
+            }
+            if (weapon.type == resistance3) {
+                known_resistance3 = true;
+                additional_damage -= 1;
+            }
+            int damage_dealt = std::max(0, weapon.damage + additional_damage);
+            if (distrib(g)<=weapon.crit_rate) {
+                damage_dealt *= 3;
+                std::cout << "Wow! You did a critical hit! ";
+            }
+            std::cout << this->name << " took " << damage_dealt << " damage!" << std::endl;
+            hp_remaining -= damage_dealt;
+            return true;
+        }
+        else std::cout << "Oh no, you missed!" << std::endl;
+        return false;
+    }
+
+};
+
 std::vector<Weapon> list_of_weapons = {
     {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
     {"Ice magic", WeaponType::Ice, 0, 90, 3, 5, true},
@@ -275,6 +373,22 @@ std::vector<Monster> list_of_monsters = {
     {"monster12", 14, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, 6, 75, 0, 15, WeaponType::Thunder},
     {"monster13", 18, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
     {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
+};
+
+std::vector<Boss> list_of_bosses = {
+    {"boss1", 24, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, 10, 5, WeaponType::Physical},
+    {"boss2", 30, WeaponType::Ice, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, 0, 0, WeaponType::Physical},
+    {"boss3", 36, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::Physical, WeaponType::None, 5, 75, 0, 10, WeaponType::Ice},
+    {"boss4", 28, WeaponType::Light, WeaponType::Dark, WeaponType::None, WeaponType::None, WeaponType::None,  4, 90, 0, 15, WeaponType::Thunder},
+    {"boss5", 40, WeaponType::Wind, WeaponType::Water, WeaponType::Fire, WeaponType::Ice, WeaponType::Light, 3, 85, 0, 5, WeaponType::Fire},
+    {"boss6", 20, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::Dark, WeaponType::Fire, 7, 85, 15, 15, WeaponType::Dark},
+    {"boss7", 24, WeaponType::Dark, WeaponType::Thunder, WeaponType::Light, WeaponType::None, WeaponType::None, 6, 75, 20, 2, WeaponType::Light},
+    {"boss8", 48, WeaponType::None, WeaponType::None, WeaponType::Fire, WeaponType::Ground, WeaponType::None, 2, 75, 0, 10, WeaponType::Physical},
+    {"boss9", 32, WeaponType::Thunder, WeaponType::Wind, WeaponType::Physical, WeaponType::None, WeaponType::None, 5, 80, 0, 5, WeaponType::Ice},
+    {"boss10", 44, WeaponType::Thunder, WeaponType::Ice, WeaponType::Water, WeaponType::Dark, WeaponType::Fire, 3, 80, 15, 0, WeaponType::Water},
+    {"boss11", 28, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, WeaponType::None, 6, 75, 0, 15, WeaponType::Thunder},
+    {"boss12", 36, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
+    {"boss13", 32, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, WeaponType::None, 5, 80, 0, 0, WeaponType::Ground}
 };
 
 std::vector<Armor> list_of_armor = {
@@ -375,6 +489,23 @@ void enable_ansi() {
 void enable_ansi() {}
 #endif
 
+void wait();
+void clear_screen ();
+std::string type_to_string (WeaponType type);
+void print_weapons_inventory (const Player & player);
+void print_armor_inventory (const Player & player);
+void print_current_weapons (const Player & player, const Monster & monster);
+void print_current_weapons (const Player & player, const Boss & boss);
+void update_weaknesses (const Weapon & weapon, std::vector<Monster> & monsters_of_the_wave, int index_monster);
+void update_weaknesses (const Weapon & weapon, std::vector<Boss> & bosses_of_the_wave, int index_boss);
+bool start_wave (Player & player, int wave_num);
+void update_current_equipment(Player & player);
+void exclude_weapons (const Player & player, std::vector<Weapon> & available_weapons);
+void exclude_armor (const Player & player, std::vector<Armor> & available_armor);
+bool boost(Player & player, int choice);
+void boost_player (Player & player);
+void print_lore (int wave_num);
+
 void wait() {
     std::cout << "Press Enter to continue" << std::endl;
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -385,6 +516,29 @@ void clear_screen () {
     // \033[1;1H = move the cursor to top-left
     // \033[3J -> deletes all scrollback buffer
     std::cout << "\033[H\033[2J\033[3J";
+}
+
+void print_lore (const int wave_num) {
+    switch (wave_num) {
+        case 0: std::cout << "Lythia... A kingdom full of life, where war was considered nothing more than a legend by its inhabitants. The King, known as \"The Founder,\" was beloved by everyone in the realm. \n"
+                             "However, this would not be enough to change the destiny that awaited him.\n"
+                 "One day, the King's right hand—the Sorcerer—had a vision: a vision that showed HELL.\n"
+                 "The realm was thrown into pure chaos by unknown creatures, guided by the Devil itself.\n"
+                 "These creatures had only ever been mentioned in ancient textbooks, which most considered \"foolish tales for children.\"\n"
+                 "Luckily, the King was not foolish.\n"
+                 "He began studying these ancient books until he stumbled upon a myth about an unnatural figure: the Knight of Doom, who would appear when the War of Destiny began.\n"
+                 "So, was everything going to be fine? Would everyone be saved? These were the hopes of the Founder, but unfortunately... he was wrong.\n"
+                 "On an ordinary night, something terrible happened.\n"
+                 "The \"Devil\" appeared outside the realm with an almost infinite army of unknown creatures known as the \"Monsters of Eternal Suffering.\"\n"
+                 "The King tried to fight the Devil alongside his army, but he died trying to save the Sorcerer, who managed to escape.\n"
+                 "Thanks to his escape, the Sorcerer was able to evacuate what remained of the population.\n"
+                 "That same night, he had one final vision that guided him to a knight—the only one who had survived the battle against the monsters.\n"
+                 "He had no name, only a title: The Knight of Doom. And he will avenge all the fallen and destroy the Devil, even if it costs him his life." << std::endl;
+        break;
+        default: break;
+    }
+    wait();
+    clear_screen();
 }
 
 std::string type_to_string (const WeaponType type){
@@ -499,50 +653,99 @@ void print_current_weapons (const Player & player, const Monster & monster) {
     std::cout << std::string(105, '*') << std::endl;
 }
 
-void update_weaknesses (const Weapon & weapon, Monster & monster, std::vector<Monster> & monsters_of_the_wave, int index_monster) {
-    if(weapon.type == monsters_of_the_wave[index_monster].weakness1) {
-        monsters_of_the_wave[index_monster].known_weakness1 = true;
-        monster.known_weakness1 = true;
+void print_current_weapons (const Player & player, const Boss & boss) {
+    std::cout << std::string(105, '*') << std::endl;
+    std::cout << std::left
+              << std::setw(10) << "Number"
+              << std::setw(20) << "Name"
+              << std::setw(15) << "Damage"
+              << std::setw(15) << "Precision"
+              << std::setw(15) << "Criticals %"
+              << std::setw(15) << "Durability"
+              << std::setw(15) << "Type" << std::endl;
+    std::cout << std::string(105, '-') << std::endl;
+
+    for (int i=0; i<player.current_weapons.size(); i++) {
+        std::string durability = std::to_string(player.current_weapons[i].current_durability);
+        if (player.current_weapons[i].is_infinite) durability = "infinite";
+        int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-boss.evasion_rate);
+        int damage = player.current_weapons[i].damage;
+        if(boss.known_resistance1 && player.current_weapons[i].type == boss.resistance1) damage -= 3;
+        if(boss.known_resistance2 && player.current_weapons[i].type == boss.resistance2) damage -= 2;
+        if(boss.known_resistance3 && player.current_weapons[i].type == boss.resistance3) damage -= 1;
+        if(boss.known_weakness1 && player.current_weapons[i].type == boss.weakness1) damage += 3;
+        if(boss.known_weakness2 && player.current_weapons[i].type == boss.weakness2) damage += 2;
+        if(player.current_weapons[i].type == WeaponType::Physical) damage += player.strength;
+        damage = std::max (0, damage);
+        std::cout << std::setw(10) << i+1
+                  << std::setw(20) << player.current_weapons[i].name
+                  << std::setw(15) << damage
+                  << std::setw(15) << effective_hit_rate
+                  << std::setw(15) << player.current_weapons[i].crit_rate
+                  << std::setw(15) << durability
+                  << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
+        if (i!=player.current_weapons.size()-1) std::cout << std::string(105, '-') << std::endl;
+        else std::cout << std::endl;
     }
-    if(weapon.type == monsters_of_the_wave[index_monster].weakness2) {
-        monsters_of_the_wave[index_monster].known_weakness2 = true;
-        monster.known_weakness2 = true;
-    }
-    if(weapon.type == monsters_of_the_wave[index_monster].resistance1) {
-        monsters_of_the_wave[index_monster].known_resistance1 = true;
-        monster.known_resistance1 = true;
-    }
-    if(weapon.type == monsters_of_the_wave[index_monster].resistance2) {
-        monsters_of_the_wave[index_monster].known_resistance2 = true;
-        monster.known_resistance2 = true;
-    }
+    std::cout << std::string(105, '*') << std::endl;
 }
 
+void update_weaknesses (const Weapon & weapon, std::vector<Monster> & monsters_of_the_wave, int index_monster) {
+    if(weapon.type == monsters_of_the_wave[index_monster].weakness1) monsters_of_the_wave[index_monster].known_weakness1 = true;
+    if(weapon.type == monsters_of_the_wave[index_monster].weakness2) monsters_of_the_wave[index_monster].known_weakness2 = true;
+    if(weapon.type == monsters_of_the_wave[index_monster].resistance1) monsters_of_the_wave[index_monster].known_resistance1 = true;
+    if(weapon.type == monsters_of_the_wave[index_monster].resistance2) monsters_of_the_wave[index_monster].known_resistance2 = true;
+}
+
+void update_weaknesses (const Weapon & weapon, std::vector<Boss> & bosses_of_the_wave, int index_boss) {
+    if(weapon.type == bosses_of_the_wave[index_boss].weakness1) bosses_of_the_wave[index_boss].known_weakness1 = true;
+    if(weapon.type == bosses_of_the_wave[index_boss].weakness2) bosses_of_the_wave[index_boss].known_weakness2 = true;
+    if(weapon.type == bosses_of_the_wave[index_boss].resistance1) bosses_of_the_wave[index_boss].known_resistance1 = true;
+    if(weapon.type == bosses_of_the_wave[index_boss].resistance2) bosses_of_the_wave[index_boss].known_resistance2 = true;
+}
 
 bool start_wave (Player & player, const int wave_num) {
 
+    print_lore(wave_num);
+
+    for (int i = 0; i < player.current_weapons.size(); i++) {
+        player.current_weapons[i].current_durability = player.current_weapons[i].durability;
+    }
+
+    player.current_armor.current_durability = player.current_armor.durability;;
+
     std::vector<Monster> monsters_of_the_wave;
+    std::vector<Boss> bosses_of_the_wave;
 
     for(int i = 0; i < 3+wave_num; i++) {
         if (i<list_of_monsters.size()) monsters_of_the_wave.push_back(list_of_monsters[i]);
     }
+    for(int i = 0; i < +wave_num; i++) {
+        if (i<list_of_bosses.size()) bosses_of_the_wave.push_back(list_of_bosses[i]);
+    }
 
     for (int i=0; i < monsters_of_the_wave.size(); i++) monsters_of_the_wave[i].upgrade_monster(wave_num);
+    for (int i=0; i < bosses_of_the_wave.size(); i++) bosses_of_the_wave[i].upgrade_monster(wave_num);
 
     for(int i = 0; i < 3 + wave_num*2; i++) {
         clear_screen();
         std::uniform_int_distribution<int> distrib(1, static_cast<int>(monsters_of_the_wave.size()));
         int index_monster = distrib(g)-1;
         Monster monster = monsters_of_the_wave[index_monster];
-        std::cout << std::endl << monster.name << " has appeared!" << std::endl;
+        std::cout << monster.name << " has appeared!" << std::endl;
         wait();
         do {
             print_current_weapons(player, monster);
-            std::cout << "Which weapon do you want to use?" << std::endl;
             std::string weapon_chosen;
-            std::getline(std::cin, weapon_chosen);
+            bool valid_weapon = false;
+            do {
+                std::cout << "Which weapon do you want to use?" << std::endl;
+                std::getline(std::cin, weapon_chosen);
+                if (player.current_weapons[stoi(weapon_chosen)-1].is_broken()) std::cout << "That weapon is broken, please select another one" << std::endl;
+                else valid_weapon = true;
+            }while (!valid_weapon);
             bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) update_weaknesses(player.current_weapons[stoi(weapon_chosen)-1], monster, monsters_of_the_wave, index_monster);
+            if(hit) update_weaknesses(player.current_weapons[stoi(weapon_chosen)-1], monsters_of_the_wave, index_monster);
             wait();
 
             if (!monster.is_dead()) {
@@ -555,6 +758,34 @@ bool start_wave (Player & player, const int wave_num) {
         }while (!player.has_lost() && !monster.is_dead());
         if (player.has_lost()) return false;
     }
+    if (wave_num>=2) {
+        clear_screen();
+        std::uniform_int_distribution<int> distrib(1, static_cast<int>(bosses_of_the_wave.size()));
+        int index_boss = distrib(g)-1;
+        Boss boss = bosses_of_the_wave[index_boss];
+        std::cout << std::endl << "Boss " << boss.name << " has appeared!" << std::endl;
+        wait();
+        do {
+            print_current_weapons(player, boss);
+            std::cout << "Which weapon do you want to use?" << std::endl;
+            std::string weapon_chosen;
+            std::getline(std::cin, weapon_chosen);
+            bool hit = boss.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
+            if(hit) update_weaknesses(player.current_weapons[stoi(weapon_chosen)-1], bosses_of_the_wave, index_boss);
+            wait();
+
+            if (!boss.is_dead()) {
+                std::cout << boss.name << " is going to attack you!" << std::endl;
+                player.take_damage(boss);
+            }
+            else std::cout << "You killed " << boss.name << "!" << std::endl;
+            wait();
+            clear_screen();
+        }while (!player.has_lost() && !boss.is_dead());
+        if (player.has_lost()) return false;
+    }
+    std::cout << std::endl << "You completed the wave number " << wave_num+1 << "!" << std::endl << std::endl;
+    boost_player(player);
     return true;
 }
 
@@ -686,15 +917,13 @@ int main () {
     std::string username;
     std::getline(std::cin, username);
     Player player (username);
-    for (int i = 0; i < 3; i++) boost_player (player);
-    print_weapons_inventory(player);
-    print_armor_inventory(player);
     wait();
     clear_screen();
     int wave_num = 0;
 
-    bool wave_completed = start_wave(player, wave_num);
-    if (wave_completed) std::cout << std::endl << "You completed the wave number " << wave_num+1 << "!" << std::endl << std::endl;
-    else std::cout << std::endl << "You lost..." << std::endl;
+    while (start_wave(player, wave_num)) {
+        wave_num++;
+    }
+    std::cout << std::endl << "You lost..." << std::endl;
 
 }
