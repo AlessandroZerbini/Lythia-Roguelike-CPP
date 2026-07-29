@@ -38,12 +38,9 @@ struct Resistance {
         this->type = type;
         this->modifier = modifier;
     }
-
-    virtual ~Resistance () = default;
-
 };
 
-struct Weakness : Resistance {};
+using Weakness = Resistance;
 
 struct Armor {
     std::string name;
@@ -171,7 +168,7 @@ struct Monster {
         this->type = WeaponType::None;
     }
 
-    Monster(const std::string &name, const int base_hp, const std::vector<Resistance> & resistances, const std::vector<Weakness> & weaknesses, const int damage, const int hit_rate, const int evasion_rate, const int crit_rate, const WeaponType type) {
+    Monster(const std::string &name, const int base_hp, const std::vector<Weakness> & weaknesses, const std::vector<Resistance> & resistances, const int damage, const int hit_rate, const int evasion_rate, const int crit_rate, const WeaponType type) {
         this->name = name;
         this->base_hp = base_hp;
         this->hp_remaining = base_hp;
@@ -194,15 +191,15 @@ struct Monster {
     }
 
     int incoming_damage (const Weapon & weapon, int strength) const {
-        int damage = weapon.damage;
-        if (weapon.type == WeaponType::Physical) damage += strength;
+        int incoming_damage = weapon.damage;
+        if (weapon.type == WeaponType::Physical) incoming_damage += strength;
         for (int i = 0; i < resistances.size(); i++) {
-            if (weapon.type == resistances[i].type && resistances[i].known) damage += resistances[i].modifier;
+            if (weapon.type == resistances[i].type && resistances[i].known) incoming_damage += resistances[i].modifier;
         }
         for (int i = 0; i < weaknesses.size(); i++) {
-            if (weapon.type == weaknesses[i].type && weaknesses[i].known) damage += weaknesses[i].modifier;
+            if (weapon.type == weaknesses[i].type && weaknesses[i].known) incoming_damage += weaknesses[i].modifier;
         }
-        return std::max(0,damage);
+        return std::max(0,incoming_damage);
     }
 
     void reveal_affinities (const Weapon & weapon) {
@@ -290,36 +287,36 @@ std::vector<Weapon> list_of_weapons = {
 };
 
 std::vector<Monster> list_of_monsters = {
-    {"monster1", 12, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, 10, 5, WeaponType::Physical},
-    {"monster2", 15, WeaponType::Ice, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, 0, 0, WeaponType::Physical},
-    {"monster3", 18, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::None, 5, 75, 0, 10, WeaponType::Ice},
-    {"monster4", 20, WeaponType::Ice, WeaponType::Thunder, WeaponType::Wind, WeaponType::Physical, 5, 70, 10, 5, WeaponType::Wind},
-    {"monster5", 14, WeaponType::Light, WeaponType::Dark, WeaponType::None, WeaponType::None, 4, 90, 0, 15, WeaponType::Thunder},
-    {"monster6", 20, WeaponType::Wind, WeaponType::Water, WeaponType::Fire, WeaponType::Ice, 3, 85, 0, 5, WeaponType::Fire},
-    {"monster7", 10, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::Dark, 7, 85, 15, 15, WeaponType::Dark},
-    {"monster8", 12, WeaponType::Dark, WeaponType::Thunder, WeaponType::Light, WeaponType::None, 6, 75, 20, 2, WeaponType::Light},
-    {"monster9", 24, WeaponType::None, WeaponType::None, WeaponType::Fire, WeaponType::None, 2, 75, 0, 10, WeaponType::Physical},
-    {"monster10", 16, WeaponType::Thunder, WeaponType::Wind, WeaponType::None, WeaponType::None, 5, 80, 0, 5, WeaponType::Ice},
-    {"monster11", 22, WeaponType::Thunder, WeaponType::Ice, WeaponType::Water, WeaponType::Dark, 3, 80, 15, 0, WeaponType::Water},
-    {"monster12", 14, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, 6, 75, 0, 15, WeaponType::Thunder},
-    {"monster13", 18, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
-    {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
+    {"monster1", 12, {}, {}, 6, 80, 10, 5, WeaponType::Physical},
+    {"monster2", 15, {Weakness(WeaponType::Ice, 2)}, {Resistance(WeaponType::Physical, -2)}, 4, 85, 0, 0, WeaponType::Physical},
+    {"monster3", 18, {Weakness(WeaponType::Fire, 2)}, {Resistance(WeaponType::Ice, -2)}, 5, 75, 0, 10, WeaponType::Ice},
+    {"monster4", 20, {Weakness(WeaponType::Ice, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Wind, -2), Resistance(WeaponType::Physical, -1)}, 5, 70, 10, 5, WeaponType::Wind},
+    {"monster5", 14, {Weakness(WeaponType::Light, 2), Weakness(WeaponType::Dark, 1)}, {}, 4, 90, 0, 15, WeaponType::Thunder},
+    {"monster6", 20, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Fire, -2), Resistance(WeaponType::Ice, -1)}, 3, 85, 0, 5, WeaponType::Fire},
+    {"monster7", 10, {}, {Resistance(WeaponType::Physical, -2), Resistance(WeaponType::Dark, -1)}, 7, 85, 15, 15, WeaponType::Dark},
+    {"monster8", 12, {Weakness(WeaponType::Dark, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Light, -2)}, 6, 75, 20, 2, WeaponType::Light},
+    {"monster9", 24, {}, {Resistance(WeaponType::Fire, -2)}, 2, 75, 0, 10, WeaponType::Physical},
+    {"monster10", 16, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Wind, 1)}, {}, 5, 80, 0, 5, WeaponType::Ice},
+    {"monster11", 22, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Ice, 1)}, {Resistance(WeaponType::Water, -2), Resistance(WeaponType::Dark, -1)}, 3, 80, 15, 0, WeaponType::Water},
+    {"monster12", 14, {Weakness(WeaponType::Ground, 2)}, {Resistance(WeaponType::Thunder, -2), Resistance(WeaponType::Wind, -1)}, 6, 75, 0, 15, WeaponType::Thunder},
+    {"monster13", 18, {Weakness(WeaponType::Water, 2), Weakness(WeaponType::Ground, 1)}, {Resistance(WeaponType::Ice, -2)}, 4, 85, 5, 10, WeaponType::Fire},
+    {"monster14", 16, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Thunder, -2), Resistance(WeaponType::Physical, -1)}, 5, 80, 0, 0, WeaponType::Ground}
 };
 
 std::vector<Monster> list_of_bosses = {
-    {"boss1", 24, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, 10, 5, WeaponType::Physical},
-    {"boss2", 30, WeaponType::Ice, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, 0, 0, WeaponType::Physical},
-    {"boss3", 36, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::Physical, WeaponType::None, 5, 75, 0, 10, WeaponType::Ice},
-    {"boss4", 28, WeaponType::Light, WeaponType::Dark, WeaponType::None, WeaponType::None, WeaponType::None,  4, 90, 0, 15, WeaponType::Thunder},
-    {"boss5", 40, WeaponType::Wind, WeaponType::Water, WeaponType::Fire, WeaponType::Ice, WeaponType::Light, 3, 85, 0, 5, WeaponType::Fire},
-    {"boss6", 20, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::Dark, WeaponType::Fire, 7, 85, 15, 15, WeaponType::Dark},
-    {"boss7", 24, WeaponType::Dark, WeaponType::Thunder, WeaponType::Light, WeaponType::None, WeaponType::None, 6, 75, 20, 2, WeaponType::Light},
-    {"boss8", 48, WeaponType::None, WeaponType::None, WeaponType::Fire, WeaponType::Ground, WeaponType::None, 2, 75, 0, 10, WeaponType::Physical},
-    {"boss9", 32, WeaponType::Thunder, WeaponType::Wind, WeaponType::Physical, WeaponType::None, WeaponType::None, 5, 80, 0, 5, WeaponType::Ice},
-    {"boss10", 44, WeaponType::Thunder, WeaponType::Ice, WeaponType::Water, WeaponType::Dark, WeaponType::Fire, 3, 80, 15, 0, WeaponType::Water},
-    {"boss11", 28, WeaponType::Ground, WeaponType::None, WeaponType::Thunder, WeaponType::Wind, WeaponType::None, 6, 75, 0, 15, WeaponType::Thunder},
-    {"boss12", 36, WeaponType::Water, WeaponType::Ground, WeaponType::Ice, WeaponType::None, WeaponType::None, 4, 85, 5, 10, WeaponType::Fire},
-    {"boss13", 32, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, WeaponType::None, 5, 80, 0, 0, WeaponType::Ground}
+    {"boss1", 24, {}, {}, 6, 80, 10, 5, WeaponType::Physical},
+    {"boss2", 30, {Weakness(WeaponType::Ice, 2)}, {Resistance(WeaponType::Physical, -2)}, 4, 85, 0, 0, WeaponType::Physical},
+    {"boss3", 36, {Weakness(WeaponType::Fire, 2)}, {Resistance(WeaponType::Ice, -3), Resistance(WeaponType::Physical, -2)}, 5, 75, 0, 10, WeaponType::Ice},
+    {"boss4", 28, {Weakness(WeaponType::Light, 2), Weakness(WeaponType::Dark, 1)}, {}, 4, 90, 0, 15, WeaponType::Thunder},
+    {"boss5", 40, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Fire, -3), Resistance(WeaponType::Ice, -2), Resistance(WeaponType::Light, -1)}, 3, 85, 0, 5, WeaponType::Fire},
+    {"boss6", 20, {}, {Resistance(WeaponType::Physical, -3), Resistance(WeaponType::Dark, -2), Resistance(WeaponType::Fire, -1)}, 7, 85, 15, 15, WeaponType::Dark},
+    {"boss7", 24, {Weakness(WeaponType::Dark, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Light, -1)}, 6, 75, 20, 2, WeaponType::Light},
+    {"boss8", 48, {}, {Resistance(WeaponType::Fire, -3), Resistance(WeaponType::Ground, -2)}, 2, 75, 0, 10, WeaponType::Physical},
+    {"boss9", 32, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Wind, 1)}, {Resistance(WeaponType::Physical, -1)}, 5, 80, 0, 5, WeaponType::Ice},
+    {"boss10", 44, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Ice, 1)}, {Resistance(WeaponType::Water, -3), Resistance(WeaponType::Dark, -2), Resistance(WeaponType::Fire, -1)}, 3, 80, 15, 0, WeaponType::Water},
+    {"boss11", 28, {Weakness(WeaponType::Ground, 2)}, {Resistance(WeaponType::Thunder, -3), Resistance(WeaponType::Wind, -2)}, 6, 75, 0, 15, WeaponType::Thunder},
+    {"boss12", 36, {Weakness(WeaponType::Water, 2), Weakness(WeaponType::Ground, 1)}, {Resistance(WeaponType::Ice, -1)}, 4, 85, 5, 10, WeaponType::Fire},
+    {"boss13", 32, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Thunder, -3), Resistance(WeaponType::Physical, -2)}, 5, 80, 0, 0, WeaponType::Ground}
 };
 
 std::vector<Armor> list_of_armor = {
@@ -577,7 +574,6 @@ void print_current_weapons (const Player & player, const Monster & monster) {
         if (player.current_weapons[i].is_infinite) durability = "infinite";
         int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-monster.evasion_rate);
         int damage = monster.incoming_damage(player.current_weapons[i],player.strength);
-        if(player.current_weapons[i].type == WeaponType::Physical) damage += player.strength;
         damage = std::max (0, damage);
         std::cout << std::setw(10) << i+1
                   << std::setw(20) << player.current_weapons[i].name
@@ -608,7 +604,7 @@ bool start_wave (Player & player, const int wave_num) {
     for(int i = 0; i < 3+wave_num; i++) {
         if (i<list_of_monsters.size()) monsters_of_the_wave.push_back(list_of_monsters[i]);
     }
-    for(int i = 0; i < +wave_num; i++) {
+    for(int i = 0; i < wave_num; i++) {
         if (i<list_of_bosses.size()) bosses_of_the_wave.push_back(list_of_bosses[i]);
     }
 
