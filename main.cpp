@@ -468,7 +468,7 @@ std::string type_to_string (const WeaponType type){
 
 void print_monster_affinities (const Monster & monster) {
     std::cout << "Weaknesses: ";
-    if (monster.weaknesses.empty()) std::cout << "None" << std::endl;
+    if (monster.weaknesses.empty()) std::cout << "None";
     else {
         if (monster.weaknesses[0].known) std::cout << type_to_string(monster.weaknesses[0].type);
         else std::cout << "???";
@@ -484,7 +484,7 @@ void print_monster_affinities (const Monster & monster) {
         }
     }
     std::cout << std::endl << "Resistances: ";
-    if (monster.resistances.empty()) std::cout << "None" << std::endl;
+    if (monster.resistances.empty()) std::cout << "None";
     else {
         if (monster.resistances[0].known) std::cout << type_to_string(monster.resistances[0].type);
         else std::cout << "???";
