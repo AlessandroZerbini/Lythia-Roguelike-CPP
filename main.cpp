@@ -610,7 +610,8 @@ bool start_wave (Player & player, const int wave_num) {
         player.current_weapons[i].current_durability = player.current_weapons[i].durability;
     }
 
-    player.current_armor.current_durability = player.current_armor.durability;;
+    player.current_armor.current_durability = player.current_armor.durability;
+    player.hp_remaining = player.base_hp;
 
     std::vector<Monster> monsters_of_the_wave;
     std::vector<Monster> bosses_of_the_wave;
@@ -635,6 +636,8 @@ bool start_wave (Player & player, const int wave_num) {
         do {
             print_current_weapons(player, monster);
             print_monster_affinities(monster);
+            std::cout << "Current HP: " << player.hp_remaining << "/" << player.base_hp << std::endl;
+            std::cout << "Current monster's HP: " << monster.hp_remaining << "/" << monster.base_hp << std::endl << std::endl;
             std::string weapon_chosen;
             bool valid_weapon = false;
             do {
@@ -667,9 +670,16 @@ bool start_wave (Player & player, const int wave_num) {
         do {
             print_current_weapons(player, boss);
             print_monster_affinities(boss);
-            std::cout << "Which weapon do you want to use?" << std::endl;
+            std::cout << "Current HP: " << player.hp_remaining << "/" << player.base_hp << std::endl;
+            std::cout << "Current monster's HP: " << boss.hp_remaining << "/" << boss.base_hp << std::endl << std::endl;
+            bool valid_weapon = false;
             std::string weapon_chosen;
-            std::getline(std::cin, weapon_chosen);
+            do {
+                std::cout << "Which weapon do you want to use?" << std::endl;
+                std::getline(std::cin, weapon_chosen);
+                if (player.current_weapons[stoi(weapon_chosen)-1].is_broken()) std::cout << "That weapon is broken, please select another one" << std::endl;
+                else valid_weapon = true;
+            }while (!valid_weapon);
             bool hit = boss.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
             if(hit) bosses_of_the_wave[index_boss].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);;
             wait();
