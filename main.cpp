@@ -24,16 +24,35 @@ enum class WeaponType {
     None
 };
 
+struct Resistance {
+    WeaponType type;
+    int modifier;
+    bool known = false;
+
+    Resistance () {
+        this->type = WeaponType::None;
+        this->modifier = 0;
+    }
+
+    Resistance (WeaponType type, int modifier) {
+        this->type = type;
+        this->modifier = modifier;
+    }
+
+    virtual ~Resistance () = default;
+
+};
+
+struct Weakness : Resistance {};
+
 struct Armor {
     std::string name;
     int damage_reduction;
     int durability;
     int current_durability;
     int evasion;
-    WeaponType weakness1;
-    WeaponType weakness2;
-    WeaponType resistance1;
-    WeaponType resistance2;
+    std::vector<Resistance> resistances;
+    std::vector<Weakness> weaknesses;
     bool is_unbreakable;
 
     Armor() {
@@ -42,10 +61,6 @@ struct Armor {
         this->durability = 0;
         this->current_durability=this->durability;
         this->evasion = 0;
-        this->weakness1 = WeaponType::None;
-        this->weakness2 = WeaponType::None;
-        this->resistance1 = WeaponType::None;
-        this->resistance2 = WeaponType::None;
         this->is_unbreakable = true;
     }
 
@@ -55,10 +70,17 @@ struct Armor {
         this->durability = durability;
         this->current_durability=this->durability;
         this->evasion = evasion;
-        this->weakness1 = WeaponType::None;
-        this->weakness2 = WeaponType::None;
-        this->resistance1 = WeaponType::None;
-        this->resistance2 = WeaponType::None;
+        this->is_unbreakable = is_unbreakable;
+    }
+
+    Armor(const std::string &name, const int damage_reduction, const int durability, const int evasion, const std::vector<Resistance> & resistances, const std::vector<Weakness> & weaknesses,  const bool is_unbreakable) {
+        this->name=name;
+        this->damage_reduction = damage_reduction;
+        this->durability = durability;
+        this->current_durability=this->durability;
+        this->evasion = evasion;
+        this->resistances = resistances;
+        this->weaknesses = weaknesses;
         this->is_unbreakable = is_unbreakable;
     }
 
@@ -70,19 +92,6 @@ struct Armor {
         }
         damage_reduction += distrib(g);
         evasion += 2*distrib(g);
-    }
-
-    Armor(const std::string &name, const int damage_reduction, const int durability, const int evasion, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2,  const bool is_unbreakable) {
-        this->name=name;
-        this->damage_reduction = damage_reduction;
-        this->durability = durability;
-        this->current_durability=this->durability;
-        this->evasion = evasion;
-        this->weakness1 = weakness1;
-        this->weakness2 = weakness2;
-        this->resistance1 = resistance1;
-        this->resistance2 = resistance2;
-        this->is_unbreakable = is_unbreakable;
     }
 
     bool is_broken() const {
@@ -143,14 +152,8 @@ struct Monster {
     std::string name;
     int base_hp;
     int hp_remaining;
-    WeaponType weakness1;
-    WeaponType weakness2;
-    bool known_weakness1;
-    bool known_weakness2;
-    WeaponType resistance1;
-    WeaponType resistance2;
-    bool known_resistance1;
-    bool known_resistance2;
+    std::vector<Resistance> resistances;
+    std::vector<Weakness> weaknesses;
     int damage;
     int hit_rate;
     int evasion_rate;
@@ -161,14 +164,6 @@ struct Monster {
         this->name = "Unknown";
         this->base_hp = 0;
         this->hp_remaining = base_hp;
-        this->weakness1 = WeaponType::None;
-        this->weakness2 = WeaponType::None;
-        this->known_weakness1 = false;
-        this->known_weakness2 = false;
-        this->resistance1 = WeaponType::None;
-        this->resistance2 = WeaponType::None;
-        this->known_resistance1 = false;
-        this->known_resistance2 = false;
         this->damage = 0;
         this->hit_rate = 0;
         this->evasion_rate = 0;
@@ -176,18 +171,12 @@ struct Monster {
         this->type = WeaponType::None;
     }
 
-    Monster(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2, const int damage, const int hit_rate, const int evasion_rate, const int crit_rate, const WeaponType type) {
+    Monster(const std::string &name, const int base_hp, const std::vector<Resistance> & resistances, const std::vector<Weakness> & weaknesses, const int damage, const int hit_rate, const int evasion_rate, const int crit_rate, const WeaponType type) {
         this->name = name;
         this->base_hp = base_hp;
         this->hp_remaining = base_hp;
-        this->weakness1 = weakness1;
-        this->weakness2 = weakness2;
-        this->known_weakness1 = false;
-        this->known_weakness2 = false;
-        this->resistance1 = resistance1;
-        this->resistance2 = resistance2;
-        this->known_resistance1 = false;
-        this->known_resistance2 = false;
+        this->resistances = resistances;
+        this->weaknesses = weaknesses;
         this->damage = damage;
         this->hit_rate = hit_rate;
         this->evasion_rate = evasion_rate;
@@ -204,6 +193,27 @@ struct Monster {
         this->crit_rate += wave_num;
     }
 
+    int incoming_damage (const Weapon & weapon, int strength) const {
+        int damage = weapon.damage;
+        if (weapon.type == WeaponType::Physical) damage += strength;
+        for (int i = 0; i < resistances.size(); i++) {
+            if (weapon.type == resistances[i].type && resistances[i].known) damage += resistances[i].modifier;
+        }
+        for (int i = 0; i < weaknesses.size(); i++) {
+            if (weapon.type == weaknesses[i].type && weaknesses[i].known) damage += weaknesses[i].modifier;
+        }
+        return std::max(0,damage);
+    }
+
+    void reveal_affinities (const Weapon & weapon) {
+        for (int i = 0; i < resistances.size(); i++) {
+            if (weapon.type == resistances[i].type) resistances[i].known = true;
+        }
+        for (int i = 0; i < weaknesses.size(); i++) {
+            if (weapon.type == weaknesses[i].type) weaknesses[i].known = true;
+        }
+    }
+
     bool take_damage (Weapon & weapon, const int player_strength) {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
@@ -211,21 +221,17 @@ struct Monster {
             if (!weapon.is_infinite && !weapon.is_broken()) weapon.current_durability--;
             int additional_damage = 0;
             if(weapon.type == WeaponType::Physical) additional_damage += player_strength;
-            if (weapon.type == weakness1) {
-                known_weakness1 = true;
-                additional_damage += 3;
+            for (int i = 0; i < resistances.size(); i++) {
+                if (weapon.type == resistances[i].type) {
+                    additional_damage += resistances[i].modifier;
+                    resistances[i].known = true;
+                }
             }
-            if (weapon.type == weakness2) {
-                known_weakness2 = true;
-                additional_damage += 2;
-            }
-            if (weapon.type == resistance1) {
-                known_resistance1 = true;
-                additional_damage -= 2;
-            }
-            if (weapon.type == resistance2) {
-                known_resistance2 = true;
-                additional_damage -= 1;
+            for (int i = 0; i < weaknesses.size(); i++) {
+                if (weapon.type == weaknesses[i].type) {
+                    additional_damage += weaknesses[i].modifier;
+                    weaknesses[i].known = true;
+                }
             }
             int damage_dealt = std::max(0, weapon.damage + additional_damage);
             if (distrib(g)<=weapon.crit_rate) {
@@ -245,69 +251,7 @@ struct Monster {
     }
 };
 
-struct Boss : Monster {
-
-    WeaponType resistance3;
-    bool known_resistance3;
-
-    Boss() {
-        this->name = "Unknown";
-        this->base_hp = 0;
-        this->hp_remaining = base_hp;
-        this->weakness1 = WeaponType::None;
-        this->weakness2 = WeaponType::None;
-        this->known_weakness1 = false;
-        this->known_weakness2 = false;
-        this->resistance1 = WeaponType::None;
-        this->resistance2 = WeaponType::None;
-        this->resistance3 = WeaponType::None;
-        this->known_resistance1 = false;
-        this->known_resistance2 = false;
-        this->known_resistance3 = false;
-        this->damage = 0;
-        this->hit_rate = 0;
-        this->evasion_rate = 0;
-        this->crit_rate = 0;
-        this->type = WeaponType::None;
-    }
-
-    Boss(const std::string &name, const int base_hp, const WeaponType weakness1, const WeaponType weakness2, const WeaponType resistance1, const WeaponType resistance2, const WeaponType resistance3, const int damage, const int hit_rate, const int evasion_rate, const int crit_rate, const WeaponType type) {
-        this->name = name;
-        this->base_hp = base_hp;
-        this->hp_remaining = base_hp;
-        this->weakness1 = weakness1;
-        this->weakness2 = weakness2;
-        this->known_weakness1 = false;
-        this->known_weakness2 = false;
-        this->resistance1 = resistance1;
-        this->resistance2 = resistance2;
-        this->resistance3 = resistance3;
-        this->known_resistance1 = false;
-        this->known_resistance2 = false;
-        this->known_resistance3 = false;
-        this->damage = damage;
-        this->hit_rate = hit_rate;
-        this->evasion_rate = evasion_rate;
-        this->crit_rate = crit_rate;
-        this->type = type;
-    }
-
-    void upgrade_monster(const int wave_num) {
-        this->base_hp += 5*wave_num;
-        this->hp_remaining = this->base_hp;
-        this->damage += 3*wave_num;
-        this->hit_rate += 2*wave_num;
-        this->evasion_rate += 2*wave_num;
-        this->crit_rate += 3*wave_num;
-    }
-
-    bool take_damage (Weapon & weapon, const int player_strength) {
-        std::uniform_int_distribution<int> distrib(1, 100);
-        int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
-        if (distrib(g)<=effective_hit_rate) {
-            if (!weapon.is_infinite && !weapon.is_broken()) weapon.current_durability--;
-            int additional_damage = 0;
-            if(weapon.type == WeaponType::Physical) additional_damage += player_strength;
+/*
             if (weapon.type == weakness1) {
                 known_weakness1 = true;
                 additional_damage += 2;
@@ -328,20 +272,7 @@ struct Boss : Monster {
                 known_resistance3 = true;
                 additional_damage -= 1;
             }
-            int damage_dealt = std::max(0, weapon.damage + additional_damage);
-            if (distrib(g)<=weapon.crit_rate) {
-                damage_dealt *= 3;
-                std::cout << "Wow! You did a critical hit! ";
-            }
-            std::cout << this->name << " took " << damage_dealt << " damage!" << std::endl;
-            hp_remaining -= damage_dealt;
-            return true;
-        }
-        else std::cout << "Oh no, you missed!" << std::endl;
-        return false;
-    }
-
-};
+}; */
 
 std::vector<Weapon> list_of_weapons = {
     {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
@@ -375,7 +306,7 @@ std::vector<Monster> list_of_monsters = {
     {"monster14", 16, WeaponType::Wind, WeaponType::Water, WeaponType::Thunder, WeaponType::Physical, 5, 80, 0, 0, WeaponType::Ground}
 };
 
-std::vector<Boss> list_of_bosses = {
+std::vector<Monster> list_of_bosses = {
     {"boss1", 24, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, WeaponType::None, 6, 80, 10, 5, WeaponType::Physical},
     {"boss2", 30, WeaponType::Ice, WeaponType::None, WeaponType::None, WeaponType::Physical, WeaponType::None, 4, 85, 0, 0, WeaponType::Physical},
     {"boss3", 36, WeaponType::Fire, WeaponType::None, WeaponType::Ice, WeaponType::Physical, WeaponType::None, 5, 75, 0, 10, WeaponType::Ice},
@@ -436,10 +367,16 @@ struct Player {
             int additional_damage = 0;
             if(!current_armor.is_broken()) {
                 additional_damage-=current_armor.damage_reduction;
-                if (monster.type == current_armor.weakness1) additional_damage += 3;
+                for (int i = 0; i < current_armor.resistances.size(); i++) {
+                    if (monster.type == current_armor.resistances[i].type) additional_damage += current_armor.resistances[i].modifier;
+                }
+                for (int i = 0; i < current_armor.weaknesses.size(); i++) {
+                    if (monster.type == current_armor.weaknesses[i].type) additional_damage += current_armor.weaknesses[i].modifier;
+                }
+                /*if (monster.type == current_armor.weakness1) additional_damage += 3;
                 if (monster.type == current_armor.weakness2) additional_damage += 2;
                 if (monster.type == current_armor.resistance1) additional_damage-=2;
-                if (monster.type == current_armor.resistance2) additional_damage-=1;
+                if (monster.type == current_armor.resistance2) additional_damage-=1;*/
             }
             additional_damage-=resistance;
             int damage_dealt = std::max(0, monster.damage + additional_damage);
@@ -495,9 +432,6 @@ std::string type_to_string (WeaponType type);
 void print_weapons_inventory (const Player & player);
 void print_armor_inventory (const Player & player);
 void print_current_weapons (const Player & player, const Monster & monster);
-void print_current_weapons (const Player & player, const Boss & boss);
-void update_weaknesses (const Weapon & weapon, std::vector<Monster> & monsters_of_the_wave, int index_monster);
-void update_weaknesses (const Weapon & weapon, std::vector<Boss> & bosses_of_the_wave, int index_boss);
 bool start_wave (Player & player, int wave_num);
 void update_current_equipment(Player & player);
 void exclude_weapons (const Player & player, std::vector<Weapon> & available_weapons);
@@ -601,16 +535,25 @@ void print_armor_inventory (const Player & player) {
 
     for (int i=0; i<player.armor_inventory.size(); i++) {
         std::string durability = std::to_string(player.armor_inventory[i].durability);
+        std::string resistance1 = "None", resistance2 = "None", weakness1 = "None", weakness2 = "None";
+        if (!player.armor_inventory[i].resistances.empty()) {
+            if (player.armor_inventory[i].resistances.size()>1) resistance2 = type_to_string(player.armor_inventory[i].resistances[1].type);
+            resistance1 = type_to_string(player.armor_inventory[i].resistances[0].type);
+        }
+        if (!player.armor_inventory[i].weaknesses.empty()) {
+            if (player.armor_inventory[i].weaknesses.size()>1) weakness2 = type_to_string(player.armor_inventory[i].weaknesses[1].type);
+            weakness1 = type_to_string(player.armor_inventory[i].weaknesses[0].type);
+        }
         if (player.armor_inventory[i].is_unbreakable) durability = "infinite";
         std::cout << std::setw(10) << i+1
                   << std::setw(20) << player.armor_inventory[i].name
                   << std::setw(15) << player.armor_inventory[i].damage_reduction
                   << std::setw(15) << durability
                   << std::setw(15) << player.armor_inventory[i].evasion
-                  << std::setw(15) << type_to_string(player.armor_inventory[i].weakness1)
-                  << std::setw(15) << type_to_string(player.armor_inventory[i].weakness2)
-                  << std::setw(15) << type_to_string(player.armor_inventory[i].resistance1)
-                  << std::setw(15) << type_to_string(player.armor_inventory[i].resistance2) << std::endl;
+                  << std::setw(15) << weakness1
+                  << std::setw(15) << weakness2
+                  << std::setw(15) << resistance1
+                  << std::setw(15) << resistance2 << std::endl;
         if (i!=player.armor_inventory.size()-1) std::cout << std::string(135, '-') << std::endl;
         else std::cout << std::endl;
     }
@@ -633,11 +576,7 @@ void print_current_weapons (const Player & player, const Monster & monster) {
         std::string durability = std::to_string(player.current_weapons[i].current_durability);
         if (player.current_weapons[i].is_infinite) durability = "infinite";
         int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-monster.evasion_rate);
-        int damage = player.current_weapons[i].damage;
-        if(monster.known_resistance1 && player.current_weapons[i].type == monster.resistance1) damage -= 2;
-        if(monster.known_resistance2 && player.current_weapons[i].type == monster.resistance2) damage -= 1;
-        if(monster.known_weakness1 && player.current_weapons[i].type == monster.weakness1) damage += 3;
-        if(monster.known_weakness2 && player.current_weapons[i].type == monster.weakness2) damage += 2;
+        int damage = monster.incoming_damage(player.current_weapons[i],player.strength);
         if(player.current_weapons[i].type == WeaponType::Physical) damage += player.strength;
         damage = std::max (0, damage);
         std::cout << std::setw(10) << i+1
@@ -651,57 +590,6 @@ void print_current_weapons (const Player & player, const Monster & monster) {
         else std::cout << std::endl;
     }
     std::cout << std::string(105, '*') << std::endl;
-}
-
-void print_current_weapons (const Player & player, const Boss & boss) {
-    std::cout << std::string(105, '*') << std::endl;
-    std::cout << std::left
-              << std::setw(10) << "Number"
-              << std::setw(20) << "Name"
-              << std::setw(15) << "Damage"
-              << std::setw(15) << "Precision"
-              << std::setw(15) << "Criticals %"
-              << std::setw(15) << "Durability"
-              << std::setw(15) << "Type" << std::endl;
-    std::cout << std::string(105, '-') << std::endl;
-
-    for (int i=0; i<player.current_weapons.size(); i++) {
-        std::string durability = std::to_string(player.current_weapons[i].current_durability);
-        if (player.current_weapons[i].is_infinite) durability = "infinite";
-        int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-boss.evasion_rate);
-        int damage = player.current_weapons[i].damage;
-        if(boss.known_resistance1 && player.current_weapons[i].type == boss.resistance1) damage -= 3;
-        if(boss.known_resistance2 && player.current_weapons[i].type == boss.resistance2) damage -= 2;
-        if(boss.known_resistance3 && player.current_weapons[i].type == boss.resistance3) damage -= 1;
-        if(boss.known_weakness1 && player.current_weapons[i].type == boss.weakness1) damage += 3;
-        if(boss.known_weakness2 && player.current_weapons[i].type == boss.weakness2) damage += 2;
-        if(player.current_weapons[i].type == WeaponType::Physical) damage += player.strength;
-        damage = std::max (0, damage);
-        std::cout << std::setw(10) << i+1
-                  << std::setw(20) << player.current_weapons[i].name
-                  << std::setw(15) << damage
-                  << std::setw(15) << effective_hit_rate
-                  << std::setw(15) << player.current_weapons[i].crit_rate
-                  << std::setw(15) << durability
-                  << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
-        if (i!=player.current_weapons.size()-1) std::cout << std::string(105, '-') << std::endl;
-        else std::cout << std::endl;
-    }
-    std::cout << std::string(105, '*') << std::endl;
-}
-
-void update_weaknesses (const Weapon & weapon, std::vector<Monster> & monsters_of_the_wave, int index_monster) {
-    if(weapon.type == monsters_of_the_wave[index_monster].weakness1) monsters_of_the_wave[index_monster].known_weakness1 = true;
-    if(weapon.type == monsters_of_the_wave[index_monster].weakness2) monsters_of_the_wave[index_monster].known_weakness2 = true;
-    if(weapon.type == monsters_of_the_wave[index_monster].resistance1) monsters_of_the_wave[index_monster].known_resistance1 = true;
-    if(weapon.type == monsters_of_the_wave[index_monster].resistance2) monsters_of_the_wave[index_monster].known_resistance2 = true;
-}
-
-void update_weaknesses (const Weapon & weapon, std::vector<Boss> & bosses_of_the_wave, int index_boss) {
-    if(weapon.type == bosses_of_the_wave[index_boss].weakness1) bosses_of_the_wave[index_boss].known_weakness1 = true;
-    if(weapon.type == bosses_of_the_wave[index_boss].weakness2) bosses_of_the_wave[index_boss].known_weakness2 = true;
-    if(weapon.type == bosses_of_the_wave[index_boss].resistance1) bosses_of_the_wave[index_boss].known_resistance1 = true;
-    if(weapon.type == bosses_of_the_wave[index_boss].resistance2) bosses_of_the_wave[index_boss].known_resistance2 = true;
 }
 
 bool start_wave (Player & player, const int wave_num) {
@@ -715,7 +603,7 @@ bool start_wave (Player & player, const int wave_num) {
     player.current_armor.current_durability = player.current_armor.durability;;
 
     std::vector<Monster> monsters_of_the_wave;
-    std::vector<Boss> bosses_of_the_wave;
+    std::vector<Monster> bosses_of_the_wave;
 
     for(int i = 0; i < 3+wave_num; i++) {
         if (i<list_of_monsters.size()) monsters_of_the_wave.push_back(list_of_monsters[i]);
@@ -745,7 +633,7 @@ bool start_wave (Player & player, const int wave_num) {
                 else valid_weapon = true;
             }while (!valid_weapon);
             bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) update_weaknesses(player.current_weapons[stoi(weapon_chosen)-1], monsters_of_the_wave, index_monster);
+            if(hit) monsters_of_the_wave[index_monster].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);
             wait();
 
             if (!monster.is_dead()) {
@@ -762,7 +650,7 @@ bool start_wave (Player & player, const int wave_num) {
         clear_screen();
         std::uniform_int_distribution<int> distrib(1, static_cast<int>(bosses_of_the_wave.size()));
         int index_boss = distrib(g)-1;
-        Boss boss = bosses_of_the_wave[index_boss];
+        Monster boss = bosses_of_the_wave[index_boss];
         std::cout << std::endl << "Boss " << boss.name << " has appeared!" << std::endl;
         wait();
         do {
@@ -771,7 +659,7 @@ bool start_wave (Player & player, const int wave_num) {
             std::string weapon_chosen;
             std::getline(std::cin, weapon_chosen);
             bool hit = boss.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) update_weaknesses(player.current_weapons[stoi(weapon_chosen)-1], bosses_of_the_wave, index_boss);
+            if(hit) bosses_of_the_wave[index_boss].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);;
             wait();
 
             if (!boss.is_dead()) {
