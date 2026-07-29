@@ -413,6 +413,7 @@ void exclude_armor (const Player & player, std::vector<Armor> & available_armor)
 bool boost(Player & player, int choice);
 void boost_player (Player & player);
 void print_lore (int wave_num);
+void print_monster_affinities (const Monster & monster);
 
 void wait() {
     std::cout << "Press Enter to continue" << std::endl;
@@ -463,6 +464,42 @@ std::string type_to_string (const WeaponType type){
         case WeaponType::None: return "None";
         default: return "Unknown";
     }
+}
+
+void print_monster_affinities (const Monster & monster) {
+    std::cout << "Weaknesses: ";
+    if (monster.weaknesses.empty()) std::cout << "None" << std::endl;
+    else {
+        if (monster.weaknesses[0].known) std::cout << type_to_string(monster.weaknesses[0].type);
+        else std::cout << "???";
+        if (monster.weaknesses.size()>1) {
+            std::cout << ", ";
+            if (monster.weaknesses[1].known) std::cout << type_to_string(monster.weaknesses[1].type);
+            else std::cout << "???";
+            if (monster.weaknesses.size()>2) {
+                std::cout << ", ";
+                if (monster.weaknesses[2].known) std::cout << type_to_string(monster.weaknesses[2].type);
+                else std::cout << "???";
+            }
+        }
+    }
+    std::cout << std::endl << "Resistances: ";
+    if (monster.resistances.empty()) std::cout << "None" << std::endl;
+    else {
+        if (monster.resistances[0].known) std::cout << type_to_string(monster.resistances[0].type);
+        else std::cout << "???";
+        if (monster.resistances.size()>1) {
+            std::cout << ", ";
+            if (monster.resistances[1].known) std::cout << type_to_string(monster.resistances[1].type);
+            else std::cout << "???";
+            if (monster.resistances.size()>2) {
+                std::cout << ", ";
+                if (monster.resistances[2].known) std::cout << type_to_string(monster.resistances[2].type);
+                else std::cout << "???";
+            }
+        }
+    }
+    std::cout << std::endl;
 }
 
 void print_weapons_inventory (const Player & player) {
@@ -597,6 +634,7 @@ bool start_wave (Player & player, const int wave_num) {
         wait();
         do {
             print_current_weapons(player, monster);
+            print_monster_affinities(monster);
             std::string weapon_chosen;
             bool valid_weapon = false;
             do {
@@ -628,6 +666,7 @@ bool start_wave (Player & player, const int wave_num) {
         wait();
         do {
             print_current_weapons(player, boss);
+            print_monster_affinities(boss);
             std::cout << "Which weapon do you want to use?" << std::endl;
             std::string weapon_chosen;
             std::getline(std::cin, weapon_chosen);
