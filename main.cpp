@@ -248,29 +248,6 @@ struct Monster {
     }
 };
 
-/*
-            if (weapon.type == weakness1) {
-                known_weakness1 = true;
-                additional_damage += 2;
-            }
-            if (weapon.type == weakness2) {
-                known_weakness2 = true;
-                additional_damage += 1;
-            }
-            if (weapon.type == resistance1) {
-                known_resistance1 = true;
-                additional_damage -= 3;
-            }
-            if (weapon.type == resistance2) {
-                known_resistance2 = true;
-                additional_damage -= 2;
-            }
-            if (weapon.type == resistance3) {
-                known_resistance3 = true;
-                additional_damage -= 1;
-            }
-}; */
-
 std::vector<Weapon> list_of_weapons = {
     {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
     {"Ice magic", WeaponType::Ice, 0, 90, 3, 5, true},
