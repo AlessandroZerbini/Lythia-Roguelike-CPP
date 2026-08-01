@@ -602,38 +602,9 @@ void print_current_weapons (const Player & player, const Monster & monster) {
     std::cout << std::string(105, '*') << std::endl;
 }
 
-bool start_wave (Player & player, const int wave_num) {
+void combat (Player & player, Monster & monster, std::vector<Monster> & monsters_of_the_wave, int index_monster) {
 
-    print_lore(wave_num);
-
-    for (int i = 0; i < player.current_weapons.size(); i++) {
-        player.current_weapons[i].current_durability = player.current_weapons[i].durability;
-    }
-
-    player.current_armor.current_durability = player.current_armor.durability;
-    player.hp_remaining = player.base_hp;
-
-    std::vector<Monster> monsters_of_the_wave;
-    std::vector<Monster> bosses_of_the_wave;
-
-    for(int i = 0; i < 3+wave_num; i++) {
-        if (i<list_of_monsters.size()) monsters_of_the_wave.push_back(list_of_monsters[i]);
-    }
-    for(int i = 0; i < wave_num; i++) {
-        if (i<list_of_bosses.size()) bosses_of_the_wave.push_back(list_of_bosses[i]);
-    }
-
-    for (int i=0; i < monsters_of_the_wave.size(); i++) monsters_of_the_wave[i].upgrade_monster(wave_num);
-    for (int i=0; i < bosses_of_the_wave.size(); i++) bosses_of_the_wave[i].upgrade_monster(wave_num);
-
-    for(int i = 0; i < 3 + wave_num*2; i++) {
-        clear_screen();
-        std::uniform_int_distribution<int> distrib(1, static_cast<int>(monsters_of_the_wave.size()));
-        int index_monster = distrib(g)-1;
-        Monster monster = monsters_of_the_wave[index_monster];
-        std::cout << monster.name << " has appeared!" << std::endl;
-        wait();
-        do {
+            do {
             print_current_weapons(player, monster);
             print_monster_affinities(monster);
             std::cout << "Current HP: " << player.hp_remaining << "/" << player.base_hp << std::endl;
@@ -647,7 +618,10 @@ bool start_wave (Player & player, const int wave_num) {
                 else valid_weapon = true;
             }while (!valid_weapon);
             bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) monsters_of_the_wave[index_monster].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);
+            if(hit) {
+                monsters_of_the_wave[index_monster].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);
+                list_of_monsters[index_monster].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);
+            }
             wait();
 
             if (!monster.is_dead()) {
@@ -658,40 +632,55 @@ bool start_wave (Player & player, const int wave_num) {
             wait();
             clear_screen();
         }while (!player.has_lost() && !monster.is_dead());
+}
+
+void start_setup (Player & player, std::vector<Monster> & monsters_of_the_wave, std::vector<Monster> & bosses_of_the_wave, int wave_num) {
+    for (int i = 0; i < player.current_weapons.size(); i++) {
+        player.current_weapons[i].current_durability = player.current_weapons[i].durability;
+    }
+
+    player.current_armor.current_durability = player.current_armor.durability;
+    player.hp_remaining = player.base_hp;
+
+    for(int i = 0; i < 3+wave_num; i++) {
+        if (i<list_of_monsters.size()) monsters_of_the_wave.push_back(list_of_monsters[i]);
+    }
+    for(int i = 0; i < wave_num; i++) {
+        if (i<list_of_bosses.size()) bosses_of_the_wave.push_back(list_of_bosses[i]);
+    }
+
+    for (int i=0; i < monsters_of_the_wave.size(); i++) monsters_of_the_wave[i].upgrade_monster(wave_num);
+    for (int i=0; i < bosses_of_the_wave.size(); i++) bosses_of_the_wave[i].upgrade_monster(wave_num);
+}
+
+int select_monster (const std::vector<Monster> & monsters_of_the_wave) {
+    std::uniform_int_distribution<int> distrib(1, static_cast<int>(monsters_of_the_wave.size()));
+    return distrib(g)-1;
+}
+
+bool start_wave (Player & player, const int wave_num) {
+
+    print_lore(wave_num);
+    std::vector<Monster> monsters_of_the_wave;
+    std::vector<Monster> bosses_of_the_wave;
+    start_setup(player, monsters_of_the_wave, bosses_of_the_wave, wave_num);
+
+    for(int i = 0; i < 3 + wave_num*2; i++) {
+        clear_screen();
+        int index_monster = select_monster(monsters_of_the_wave);
+        Monster monster = monsters_of_the_wave[index_monster];
+        std::cout << monster.name << " has appeared!" << std::endl;
+        wait();
+        combat (player, monster, monsters_of_the_wave, index_monster);
         if (player.has_lost()) return false;
     }
     if (wave_num>=2) {
         clear_screen();
-        std::uniform_int_distribution<int> distrib(1, static_cast<int>(bosses_of_the_wave.size()));
-        int index_boss = distrib(g)-1;
+        int index_boss = select_monster(bosses_of_the_wave);
         Monster boss = bosses_of_the_wave[index_boss];
         std::cout << std::endl << "Boss " << boss.name << " has appeared!" << std::endl;
         wait();
-        do {
-            print_current_weapons(player, boss);
-            print_monster_affinities(boss);
-            std::cout << "Current HP: " << player.hp_remaining << "/" << player.base_hp << std::endl;
-            std::cout << "Current monster's HP: " << boss.hp_remaining << "/" << boss.base_hp << std::endl << std::endl;
-            bool valid_weapon = false;
-            std::string weapon_chosen;
-            do {
-                std::cout << "Which weapon do you want to use?" << std::endl;
-                std::getline(std::cin, weapon_chosen);
-                if (player.current_weapons[stoi(weapon_chosen)-1].is_broken()) std::cout << "That weapon is broken, please select another one" << std::endl;
-                else valid_weapon = true;
-            }while (!valid_weapon);
-            bool hit = boss.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) bosses_of_the_wave[index_boss].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);;
-            wait();
-
-            if (!boss.is_dead()) {
-                std::cout << boss.name << " is going to attack you!" << std::endl;
-                player.take_damage(boss);
-            }
-            else std::cout << "You killed " << boss.name << "!" << std::endl;
-            wait();
-            clear_screen();
-        }while (!player.has_lost() && !boss.is_dead());
+        combat (player, boss, bosses_of_the_wave, index_boss);
         if (player.has_lost()) return false;
     }
     std::cout << std::endl << "You completed the wave number " << wave_num+1 << "!" << std::endl << std::endl;
