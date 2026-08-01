@@ -249,35 +249,35 @@ struct Monster {
 };
 
 std::vector<Weapon> list_of_weapons = {
-    {"Basic sword", WeaponType::Physical, 10, 80, 6, 5, false},
-    {"Ice magic", WeaponType::Ice, 0, 90, 3, 5, true},
-    {"Fire magic", WeaponType::Fire, 0, 70, 7, 10, true},
-    {"Thunder magic", WeaponType::Thunder, 0, 75, 6, 25, true},
-    {"Wind magic", WeaponType::Wind, 0, 85, 3, 15, true},
-    {"Water magic", WeaponType::Water, 0, 90, 5, 0, true},
-    {"Ground magic", WeaponType::Ground, 0, 70, 8, 0, true},
-    {"Dark magic", WeaponType::Dark, 0, 60, 10, 25, true},
-    {"Light magic", WeaponType::Light, 0, 85, 5, 25, true},
-    {"Magic Sword", WeaponType::Physical, 20, 85, 5, 5, false},
-    {"Dark magic Sword", WeaponType::Dark, 5, 75, 8, 25, false},
-    {"Light magic Sword", WeaponType::Light, 25, 95, 5, 5, false}
+    {"Basic sword", WeaponType::Physical, 10, 85, 6, 5, false},
+    {"Ice magic", WeaponType::Ice, 0, 95, 3, 5, true},
+    {"Fire magic", WeaponType::Fire, 0, 75, 7, 10, true},
+    {"Thunder magic", WeaponType::Thunder, 0, 80, 6, 25, true},
+    {"Wind magic", WeaponType::Wind, 0, 90, 3, 15, true},
+    {"Water magic", WeaponType::Water, 0, 95, 5, 0, true},
+    {"Ground magic", WeaponType::Ground, 0, 75, 8, 0, true},
+    {"Dark magic", WeaponType::Dark, 0, 65, 10, 25, true},
+    {"Light magic", WeaponType::Light, 0, 90, 5, 25, true},
+    {"Magic Sword", WeaponType::Physical, 20, 90, 5, 5, false},
+    {"Dark magic Sword", WeaponType::Dark, 5, 80, 8, 25, false},
+    {"Light magic Sword", WeaponType::Light, 25, 100, 5, 5, false}
 };
 
 std::vector<Monster> list_of_monsters = {
-    {"monster1", 12, {}, {}, 6, 80, 10, 5, WeaponType::Physical},
-    {"monster2", 15, {Weakness(WeaponType::Ice, 2)}, {Resistance(WeaponType::Physical, -2)}, 4, 85, 0, 0, WeaponType::Physical},
-    {"monster3", 18, {Weakness(WeaponType::Fire, 2)}, {Resistance(WeaponType::Ice, -2)}, 5, 75, 0, 10, WeaponType::Ice},
-    {"monster4", 20, {Weakness(WeaponType::Ice, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Wind, -2), Resistance(WeaponType::Physical, -1)}, 5, 70, 10, 5, WeaponType::Wind},
-    {"monster5", 14, {Weakness(WeaponType::Light, 2), Weakness(WeaponType::Dark, 1)}, {}, 4, 90, 0, 15, WeaponType::Thunder},
-    {"monster6", 20, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Fire, -2), Resistance(WeaponType::Ice, -1)}, 3, 85, 0, 5, WeaponType::Fire},
-    {"monster7", 10, {}, {Resistance(WeaponType::Physical, -2), Resistance(WeaponType::Dark, -1)}, 7, 85, 15, 15, WeaponType::Dark},
-    {"monster8", 12, {Weakness(WeaponType::Dark, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Light, -2)}, 6, 75, 20, 2, WeaponType::Light},
-    {"monster9", 24, {}, {Resistance(WeaponType::Fire, -2)}, 2, 75, 0, 10, WeaponType::Physical},
-    {"monster10", 16, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Wind, 1)}, {}, 5, 80, 0, 5, WeaponType::Ice},
-    {"monster11", 22, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Ice, 1)}, {Resistance(WeaponType::Water, -2), Resistance(WeaponType::Dark, -1)}, 3, 80, 15, 0, WeaponType::Water},
-    {"monster12", 14, {Weakness(WeaponType::Ground, 2)}, {Resistance(WeaponType::Thunder, -2), Resistance(WeaponType::Wind, -1)}, 6, 75, 0, 15, WeaponType::Thunder},
-    {"monster13", 18, {Weakness(WeaponType::Water, 2), Weakness(WeaponType::Ground, 1)}, {Resistance(WeaponType::Ice, -2)}, 4, 85, 5, 10, WeaponType::Fire},
-    {"monster14", 16, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Thunder, -2), Resistance(WeaponType::Physical, -1)}, 5, 80, 0, 0, WeaponType::Ground}
+    {"monster1", 12, {}, {}, 4, 80, 10, 5, WeaponType::Physical},
+    {"monster2", 15, {Weakness(WeaponType::Ice, 2)}, {Resistance(WeaponType::Physical, -2)}, 2, 85, 0, 0, WeaponType::Physical},
+    {"monster3", 18, {Weakness(WeaponType::Fire, 2)}, {Resistance(WeaponType::Ice, -2)}, 3, 75, 0, 10, WeaponType::Ice},
+    {"monster4", 20, {Weakness(WeaponType::Ice, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Wind, -2), Resistance(WeaponType::Physical, -1)}, 3, 70, 10, 5, WeaponType::Wind},
+    {"monster5", 14, {Weakness(WeaponType::Light, 2), Weakness(WeaponType::Dark, 1)}, {}, 2, 90, 0, 15, WeaponType::Thunder},
+    {"monster6", 20, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Fire, -2), Resistance(WeaponType::Ice, -1)}, 1, 85, 0, 5, WeaponType::Fire},
+    {"monster7", 10, {}, {Resistance(WeaponType::Physical, -2), Resistance(WeaponType::Dark, -1)}, 5, 85, 15, 15, WeaponType::Dark},
+    {"monster8", 12, {Weakness(WeaponType::Dark, 2), Weakness(WeaponType::Thunder, 1)}, {Resistance(WeaponType::Light, -2)}, 4, 75, 20, 2, WeaponType::Light},
+    {"monster9", 24, {}, {Resistance(WeaponType::Fire, -2)}, 1, 75, 0, 10, WeaponType::Physical},
+    {"monster10", 16, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Wind, 1)}, {}, 3, 80, 0, 5, WeaponType::Ice},
+    {"monster11", 22, {Weakness(WeaponType::Thunder, 2), Weakness(WeaponType::Ice, 1)}, {Resistance(WeaponType::Water, -2), Resistance(WeaponType::Dark, -1)}, 1, 80, 15, 0, WeaponType::Water},
+    {"monster12", 14, {Weakness(WeaponType::Ground, 2)}, {Resistance(WeaponType::Thunder, -2), Resistance(WeaponType::Wind, -1)}, 4, 75, 0, 15, WeaponType::Thunder},
+    {"monster13", 18, {Weakness(WeaponType::Water, 2), Weakness(WeaponType::Ground, 1)}, {Resistance(WeaponType::Ice, -2)}, 2, 85, 5, 10, WeaponType::Fire},
+    {"monster14", 16, {Weakness(WeaponType::Wind, 2), Weakness(WeaponType::Water, 1)}, {Resistance(WeaponType::Thunder, -2), Resistance(WeaponType::Physical, -1)}, 3, 80, 0, 0, WeaponType::Ground}
 };
 
 std::vector<Monster> list_of_bosses = {
@@ -337,7 +337,6 @@ struct Player {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::min(95, monster.hit_rate-current_armor.evasion);
         if (distrib(g)<=effective_hit_rate) {
-            if(!current_armor.is_unbreakable && !current_armor.is_broken()) current_armor.current_durability--;
             int additional_damage = 0;
             if(!current_armor.is_broken()) {
                 additional_damage-=current_armor.damage_reduction;
@@ -347,11 +346,8 @@ struct Player {
                 for (int i = 0; i < current_armor.weaknesses.size(); i++) {
                     if (monster.type == current_armor.weaknesses[i].type) additional_damage += current_armor.weaknesses[i].modifier;
                 }
-                /*if (monster.type == current_armor.weakness1) additional_damage += 3;
-                if (monster.type == current_armor.weakness2) additional_damage += 2;
-                if (monster.type == current_armor.resistance1) additional_damage-=2;
-                if (monster.type == current_armor.resistance2) additional_damage-=1;*/
             }
+            if(!current_armor.is_unbreakable && !current_armor.is_broken()) current_armor.current_durability--;
             additional_damage-=resistance;
             int damage_dealt = std::max(0, monster.damage + additional_damage);
             if (distrib(g)<=monster.crit_rate) {
@@ -743,12 +739,14 @@ bool boost(Player & player, int choice) {
                 std::cout << "Which weapon do you want to upgrade?" << std::endl;
                 std::getline (std::cin, item_choice);
                 player.weapons_inventory[stoi(item_choice)-1].upgrade_weapon();
+                std::cout << "You upgraded " << player.weapons_inventory[stoi(item_choice)-1].name << "!" << std::endl;
             }
             if (item_choice == "2") {
                 print_armor_inventory(player);
                 std::cout << "Which armor do you want to upgrade?" << std::endl;
                 std::getline (std::cin, item_choice);
                 player.armor_inventory[stoi(item_choice)-1].upgrade_armor();
+                std::cout << "You upgraded " << player.armor_inventory[stoi(item_choice)-1].name << "!" << std::endl;
             }
             update_current_equipment(player);
             return true;
@@ -788,12 +786,24 @@ bool boost(Player & player, int choice) {
             std::cout << "There no more are available items, change your choice" << std::endl;
             return false;
         }
-        case 3: player.upgrade_health();
-                return true;
-        case 4: player.upgrade_strength();
-                return true;
-        case 5: player.upgrade_resistance();
-                return true;
+        case 3: {
+            int start_health = player.base_hp;
+            player.upgrade_health();
+            std::cout << "You increased your HP by " << player.base_hp-start_health << " points!" << std::endl;
+            return true;
+        }
+        case 4: {
+            int start_strength = player.strength;
+            player.upgrade_strength();
+            std::cout << "You increased your strength by " << player.strength-start_strength << " points!" << std::endl;
+            return true;
+        }
+        case 5: {
+            int start_resistance = player.resistance;
+            player.upgrade_resistance();
+            std::cout << "You increased your resistance by " << player.resistance-start_resistance << " points!" << std::endl;
+            return true;
+        }
         default: return false;
     }
 }
