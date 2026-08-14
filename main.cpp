@@ -401,7 +401,9 @@ void clear_screen ();
 std::string type_to_string (WeaponType type);
 void print_weapons_inventory (const Player & player);
 void print_armor_inventory (const Player & player);
+void print_current_armor (const Player & player);
 void print_current_weapons (const Player & player, const Monster & monster);
+void print_current_weapons (const Player & player);
 bool start_wave (Player & player, int wave_num);
 void update_current_equipment(Player & player);
 void exclude_weapons (const Player & player, std::vector<Weapon> & available_weapons);
@@ -410,6 +412,8 @@ bool boost(Player & player, int choice);
 void boost_player (Player & player);
 void print_lore (int wave_num);
 void print_monster_affinities (const Monster & monster);
+void choose_armor (Player & player);
+void choose_weapons (Player & player);
 
 void wait() {
     std::cout << "Press Enter to continue" << std::endl;
@@ -567,6 +571,43 @@ void print_armor_inventory (const Player & player) {
     std::cout << std::string(135, '*') << std::endl;
 }
 
+void print_current_armor (const Player & player) {
+    std::cout << std::string(135, '*') << std::endl;
+    std::cout << std::left
+              << std::setw(10) << "Number"
+              << std::setw(20) << "Name"
+              << std::setw(15) << "Defense"
+              << std::setw(15) << "Durability"
+              << std::setw(15) << "Evasion"
+              << std::setw(15) << "Weakness 1"
+              << std::setw(15) << "Weakness 2"
+              << std::setw(15) << "Resistance 1"
+              << std::setw(15) << "Resistance 2" << std::endl;
+    std::cout << std::string(130, '-') << std::endl;
+
+    std::string durability = std::to_string(player.current_armor.durability);
+    std::string resistance1 = "None", resistance2 = "None", weakness1 = "None", weakness2 = "None";
+    if (!player.current_armor.resistances.empty()) {
+        if (player.current_armor.resistances.size()>1) resistance2 = type_to_string(player.current_armor.resistances[1].type);
+        resistance1 = type_to_string(player.current_armor.resistances[0].type);
+    }
+    if (!player.current_armor.weaknesses.empty()) {
+        if (player.current_armor.weaknesses.size()>1) weakness2 = type_to_string(player.current_armor.weaknesses[1].type);
+        weakness1 = type_to_string(player.current_armor.weaknesses[0].type);
+    }
+    if (player.current_armor.is_unbreakable) durability = "infinite";
+    std::cout << std::setw(10) << 1
+              << std::setw(20) << player.current_armor.name
+              << std::setw(15) << player.current_armor.damage_reduction
+              << std::setw(15) << durability
+              << std::setw(15) << player.current_armor.evasion
+              << std::setw(15) << weakness1
+              << std::setw(15) << weakness2
+              << std::setw(15) << resistance1
+              << std::setw(15) << resistance2 << std::endl;
+    std::cout << std::string(135, '*') << std::endl;
+}
+
 void print_current_weapons (const Player & player, const Monster & monster) {
     std::cout << std::string(105, '*') << std::endl;
     std::cout << std::left
@@ -589,6 +630,34 @@ void print_current_weapons (const Player & player, const Monster & monster) {
                   << std::setw(20) << player.current_weapons[i].name
                   << std::setw(15) << damage
                   << std::setw(15) << effective_hit_rate
+                  << std::setw(15) << player.current_weapons[i].crit_rate
+                  << std::setw(15) << durability
+                  << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
+        if (i!=player.current_weapons.size()-1) std::cout << std::string(105, '-') << std::endl;
+        else std::cout << std::endl;
+    }
+    std::cout << std::string(105, '*') << std::endl;
+}
+
+void print_current_weapons (const Player & player) {
+    std::cout << std::string(105, '*') << std::endl;
+    std::cout << std::left
+              << std::setw(10) << "Number"
+              << std::setw(20) << "Name"
+              << std::setw(15) << "Damage"
+              << std::setw(15) << "Precision"
+              << std::setw(15) << "Criticals %"
+              << std::setw(15) << "Durability"
+              << std::setw(15) << "Type" << std::endl;
+    std::cout << std::string(105, '-') << std::endl;
+
+    for (int i=0; i<player.current_weapons.size(); i++) {
+        std::string durability = std::to_string(player.current_weapons[i].durability);
+        if (player.current_weapons[i].is_infinite) durability = "infinite";
+        std::cout << std::setw(10) << i+1
+                  << std::setw(20) << player.current_weapons[i].name
+                  << std::setw(15) << player.current_weapons[i].damage
+                  << std::setw(15) << player.current_weapons[i].hit_rate
                   << std::setw(15) << player.current_weapons[i].crit_rate
                   << std::setw(15) << durability
                   << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
@@ -681,6 +750,15 @@ bool start_wave (Player & player, const int wave_num) {
     }
     std::cout << std::endl << "You completed the wave number " << wave_num+1 << "!" << std::endl << std::endl;
     boost_player(player);
+    std::string choice;
+    std::cout << "Do you want to change your current weapons? (Y/N)" << std::endl;
+    std::getline(std::cin, choice);
+    if (choice=="Y" || choice=="y") choose_weapons(player);
+    clear_screen();
+    std::cout << "Do you want to change your current armor? (Y/N)" << std::endl;
+    std::getline(std::cin, choice);
+    if (choice=="Y" || choice=="y") choose_armor(player);
+    clear_screen();
     return true;
 }
 
@@ -808,6 +886,51 @@ bool boost(Player & player, int choice) {
     }
 }
 
+void choose_weapons (Player & player) {
+    std::string choice;
+    do {
+        clear_screen();
+        std::cout << "These are your current equipped weapons:" << std::endl;
+        print_current_weapons(player);
+        std::cout << "This is your current weapons' inventory:" << std::endl;
+        print_weapons_inventory(player);
+        std::cout << "Which weapon do you want to replace? (current)" << std::endl;
+        std::string choice1, choice2;
+        std::getline(std::cin, choice1);
+        std::cout << "Which weapon do you want to replace it with? (inventory)" << std::endl;
+        std::getline(std::cin, choice2);
+        bool valid_option = true;
+        for (int i = 0; i < 3; i++) {
+            if (player.weapons_inventory[stoi(choice2)-1].name==player.current_weapons[i].name) {
+                std::cout << "That weapon is already equipped, please select another one" << std::endl;
+                valid_option = false;
+            }
+        }
+        if (valid_option) player.current_weapons[stoi(choice1)-1] = player.weapons_inventory[stoi(choice2)-1];
+        std::cout << "Do you want to change your current weapons? (Y/N)" << std::endl;
+        std::getline(std::cin, choice);
+        if (choice=="N" || choice=="n") return;
+    }while (choice=="Y" || choice=="y");
+}
+
+void choose_armor (Player & player) {
+    std::string choice;
+    do {
+        clear_screen();
+        std::cout << "This is your current equipped armor:" << std::endl;
+        print_current_armor(player);
+        std::cout << "This is your current armors' inventory:" << std::endl;
+        print_armor_inventory(player);
+        std::string choice1;
+        std::cout << "Which weapon do you want to equip? (inventory)" << std::endl;
+        std::getline(std::cin, choice1);
+        player.current_armor = player.armor_inventory[stoi(choice1)-1];
+        std::cout << "Do you want to change your current armor? (Y/N)" << std::endl;
+        std::getline(std::cin, choice);
+        if (choice=="N" || choice=="n") return;
+    }while (choice=="Y" || choice=="y");
+}
+
 void boost_player (Player & player) {
     std::cout << "Choose what to do before the next wave starts:" << std::endl <<
                 "1: Upgrade an item" << std::endl <<
@@ -829,10 +952,17 @@ int main () {
     wait();
     clear_screen();
     int wave_num = 0;
-
     while (start_wave(player, wave_num)) {
         wave_num++;
     }
     std::cout << std::endl << "You lost..." << std::endl;
-
 }
+/*
+Da aggiungere: 
+cambiare l'equipaggiamento in uso,
+regex,
+mettere a posto i costruttori/i cicli/le funzioni nodiscard, 
+aggiungere nomi e lore,
+sistema di salvataggio e di record,
+dividere in file diversi
+*/
