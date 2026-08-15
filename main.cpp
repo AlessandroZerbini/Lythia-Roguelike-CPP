@@ -514,18 +514,19 @@ void print_weapons_inventory (const Player & player) {
               << std::setw(15) << "Type" << std::endl;
     std::cout << std::string(105, '-') << std::endl;
 
-    for (int i=0; i<player.weapons_inventory.size(); i++) {
-        std::string durability = std::to_string(player.weapons_inventory[i].durability);
-        if (player.weapons_inventory[i].is_infinite) durability = "infinite";
-        std::cout << std::setw(10) << i+1
-                  << std::setw(20) << player.weapons_inventory[i].name
-                  << std::setw(15) << player.weapons_inventory[i].damage
-                  << std::setw(15) << player.weapons_inventory[i].hit_rate
-                  << std::setw(15) << player.weapons_inventory[i].crit_rate
+    int index = 1;
+    for (const auto &weapon : player.weapons_inventory) {
+        std::string durability = weapon.is_infinite ? "infinite" : std::to_string(weapon.durability);
+
+        std::cout << std::setw(10) << index++
+                  << std::setw(20) << weapon.name
+                  << std::setw(15) << weapon.damage
+                  << std::setw(15) << weapon.hit_rate
+                  << std::setw(15) << weapon.crit_rate
                   << std::setw(15) << durability
-                  << std::setw(15) << type_to_string(player.weapons_inventory[i].type) << std::endl;
-        if (i!=player.weapons_inventory.size()-1) std::cout << std::string(105, '-') << std::endl;
-        else std::cout << std::endl;
+                  << std::setw(15) << type_to_string(weapon.type) << std::endl;
+
+        if (index <= player.weapons_inventory.size()) std::cout << std::string(105, '-') << std::endl;
     }
     std::cout << std::string(105, '*') << std::endl;
 }
@@ -544,29 +545,26 @@ void print_armor_inventory (const Player & player) {
               << std::setw(15) << "Resistance 2" << std::endl;
     std::cout << std::string(130, '-') << std::endl;
 
-    for (int i=0; i<player.armor_inventory.size(); i++) {
-        std::string durability = std::to_string(player.armor_inventory[i].durability);
-        std::string resistance1 = "None", resistance2 = "None", weakness1 = "None", weakness2 = "None";
-        if (!player.armor_inventory[i].resistances.empty()) {
-            if (player.armor_inventory[i].resistances.size()>1) resistance2 = type_to_string(player.armor_inventory[i].resistances[1].type);
-            resistance1 = type_to_string(player.armor_inventory[i].resistances[0].type);
-        }
-        if (!player.armor_inventory[i].weaknesses.empty()) {
-            if (player.armor_inventory[i].weaknesses.size()>1) weakness2 = type_to_string(player.armor_inventory[i].weaknesses[1].type);
-            weakness1 = type_to_string(player.armor_inventory[i].weaknesses[0].type);
-        }
-        if (player.armor_inventory[i].is_unbreakable) durability = "infinite";
-        std::cout << std::setw(10) << i+1
-                  << std::setw(20) << player.armor_inventory[i].name
-                  << std::setw(15) << player.armor_inventory[i].damage_reduction
+    int index = 1;
+    for (const auto &armor : player.armor_inventory) {
+        std::string durability = armor.is_unbreakable ? "infinite" : std::to_string(armor.durability);
+
+        std::string res1 = (!armor.resistances.empty()) ? type_to_string(armor.resistances[0].type) : "None";
+        std::string res2 = (armor.resistances.size() > 1) ? type_to_string(armor.resistances[1].type) : "None";
+        std::string weak1 = (!armor.weaknesses.empty()) ? type_to_string(armor.weaknesses[0].type) : "None";
+        std::string weak2 = (armor.weaknesses.size() > 1) ? type_to_string(armor.weaknesses[1].type) : "None";
+
+        std::cout << std::setw(10) << index++
+                  << std::setw(20) << armor.name
+                  << std::setw(15) << armor.damage_reduction
                   << std::setw(15) << durability
-                  << std::setw(15) << player.armor_inventory[i].evasion
-                  << std::setw(15) << weakness1
-                  << std::setw(15) << weakness2
-                  << std::setw(15) << resistance1
-                  << std::setw(15) << resistance2 << std::endl;
-        if (i!=player.armor_inventory.size()-1) std::cout << std::string(135, '-') << std::endl;
-        else std::cout << std::endl;
+                  << std::setw(15) << armor.evasion
+                  << std::setw(15) << weak1
+                  << std::setw(15) << weak2
+                  << std::setw(15) << res1
+                  << std::setw(15) << res2 << std::endl;
+
+        if (index <= player.armor_inventory.size()) std::cout << std::string(135, '-') << std::endl;
     }
     std::cout << std::string(135, '*') << std::endl;
 }
@@ -583,32 +581,27 @@ void print_current_armor (const Player & player) {
               << std::setw(15) << "Weakness 2"
               << std::setw(15) << "Resistance 1"
               << std::setw(15) << "Resistance 2" << std::endl;
-    std::cout << std::string(130, '-') << std::endl;
+    std::cout << std::string(135, '-') << std::endl;
 
-    std::string durability = std::to_string(player.current_armor.durability);
-    std::string resistance1 = "None", resistance2 = "None", weakness1 = "None", weakness2 = "None";
-    if (!player.current_armor.resistances.empty()) {
-        if (player.current_armor.resistances.size()>1) resistance2 = type_to_string(player.current_armor.resistances[1].type);
-        resistance1 = type_to_string(player.current_armor.resistances[0].type);
-    }
-    if (!player.current_armor.weaknesses.empty()) {
-        if (player.current_armor.weaknesses.size()>1) weakness2 = type_to_string(player.current_armor.weaknesses[1].type);
-        weakness1 = type_to_string(player.current_armor.weaknesses[0].type);
-    }
-    if (player.current_armor.is_unbreakable) durability = "infinite";
+    const std::string durability = player.current_armor.is_unbreakable ? "infinite" : std::to_string(player.current_armor.durability);
+
+    const std::string res1 = (!player.current_armor.resistances.empty()) ? type_to_string(player.current_armor.resistances[0].type) : "None";
+    const  std::string res2 = (player.current_armor.resistances.size() > 1) ? type_to_string(player.current_armor.resistances[1].type) : "None";
+    const std::string weak1 = (!player.current_armor.weaknesses.empty()) ? type_to_string(player.current_armor.weaknesses[0].type) : "None";
+    const std::string weak2 = (player.current_armor.weaknesses.size() > 1) ? type_to_string(player.current_armor.weaknesses[1].type) : "None";
+
     std::cout << std::setw(10) << 1
               << std::setw(20) << player.current_armor.name
               << std::setw(15) << player.current_armor.damage_reduction
               << std::setw(15) << durability
               << std::setw(15) << player.current_armor.evasion
-              << std::setw(15) << weakness1
-              << std::setw(15) << weakness2
-              << std::setw(15) << resistance1
-              << std::setw(15) << resistance2 << std::endl;
+              << std::setw(15) << weak1
+              << std::setw(15) << weak2
+              << std::setw(15) << res1
+              << std::setw(15) << res2 << std::endl;
     std::cout << std::string(135, '*') << std::endl;
 }
-
-void print_current_weapons (const Player & player, const Monster & monster) {
+void print_weapons_header () {
     std::cout << std::string(105, '*') << std::endl;
     std::cout << std::left
               << std::setw(10) << "Number"
@@ -619,50 +612,46 @@ void print_current_weapons (const Player & player, const Monster & monster) {
               << std::setw(15) << "Durability"
               << std::setw(15) << "Type" << std::endl;
     std::cout << std::string(105, '-') << std::endl;
+}
 
-    for (int i=0; i<player.current_weapons.size(); i++) {
-        std::string durability = std::to_string(player.current_weapons[i].current_durability);
-        if (player.current_weapons[i].is_infinite) durability = "infinite";
-        int effective_hit_rate = std::max(5, player.current_weapons[i].hit_rate-monster.evasion_rate);
-        int damage = monster.incoming_damage(player.current_weapons[i],player.strength);
-        damage = std::max (0, damage);
-        std::cout << std::setw(10) << i+1
-                  << std::setw(20) << player.current_weapons[i].name
+void print_current_weapons (const Player & player, const Monster & monster) {
+    print_weapons_header();
+
+    int index = 1;
+    for (const auto &weapon : player.current_weapons) {
+        std::string durability = weapon.is_infinite ? "infinite" : std::to_string(weapon.current_durability);
+        int effective_hit_rate = std::max(5, weapon.hit_rate - monster.evasion_rate);
+        int damage = std::max(0, monster.incoming_damage(weapon, player.strength));
+
+        std::cout << std::setw(10) << index++
+                  << std::setw(20) << weapon.name
                   << std::setw(15) << damage
                   << std::setw(15) << effective_hit_rate
-                  << std::setw(15) << player.current_weapons[i].crit_rate
+                  << std::setw(15) << weapon.crit_rate
                   << std::setw(15) << durability
-                  << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
-        if (i!=player.current_weapons.size()-1) std::cout << std::string(105, '-') << std::endl;
-        else std::cout << std::endl;
+                  << std::setw(15) << type_to_string(weapon.type) << std::endl;
+
+        if (index <= player.current_weapons.size()) std::cout << std::string(105, '-') << std::endl;
     }
     std::cout << std::string(105, '*') << std::endl;
 }
 
 void print_current_weapons (const Player & player) {
-    std::cout << std::string(105, '*') << std::endl;
-    std::cout << std::left
-              << std::setw(10) << "Number"
-              << std::setw(20) << "Name"
-              << std::setw(15) << "Damage"
-              << std::setw(15) << "Precision"
-              << std::setw(15) << "Criticals %"
-              << std::setw(15) << "Durability"
-              << std::setw(15) << "Type" << std::endl;
-    std::cout << std::string(105, '-') << std::endl;
+    print_weapons_header();
 
-    for (int i=0; i<player.current_weapons.size(); i++) {
-        std::string durability = std::to_string(player.current_weapons[i].durability);
-        if (player.current_weapons[i].is_infinite) durability = "infinite";
-        std::cout << std::setw(10) << i+1
-                  << std::setw(20) << player.current_weapons[i].name
-                  << std::setw(15) << player.current_weapons[i].damage
-                  << std::setw(15) << player.current_weapons[i].hit_rate
-                  << std::setw(15) << player.current_weapons[i].crit_rate
+    int index = 1;
+    for (const auto &weapon : player.current_weapons) {
+        std::string durability = weapon.is_infinite ? "infinite" : std::to_string(weapon.durability);
+
+        std::cout << std::setw(10) << index++
+                  << std::setw(20) << weapon.name
+                  << std::setw(15) << weapon.damage
+                  << std::setw(15) << weapon.hit_rate
+                  << std::setw(15) << weapon.crit_rate
                   << std::setw(15) << durability
-                  << std::setw(15) << type_to_string(player.current_weapons[i].type) << std::endl;
-        if (i!=player.current_weapons.size()-1) std::cout << std::string(105, '-') << std::endl;
-        else std::cout << std::endl;
+                  << std::setw(15) << type_to_string(weapon.type) << std::endl;
+
+        if (index <= player.current_weapons.size()) std::cout << std::string(105, '-') << std::endl;
     }
     std::cout << std::string(105, '*') << std::endl;
 }
@@ -947,7 +936,8 @@ int main () {
 Da aggiungere: 
 problema col crash di exclude_weapons(?)
 regex,
-mettere a posto i costruttori/i cicli/le funzioni nodiscard, 
+findif per update_current_equipment,
+mettere a posto i costruttori,
 aggiungere nomi e lore,
 sistema di salvataggio e di record,
 dividere in file diversi
