@@ -91,7 +91,7 @@ struct Armor {
         evasion += 2*distrib(g);
     }
 
-    bool is_broken() const {
+    [[nodiscard]] bool is_broken() const {
         if (is_unbreakable) return false;
         return current_durability <= 0;
     }
@@ -129,7 +129,7 @@ struct Weapon {
         this->is_infinite=is_infinite;
     }
 
-    bool is_broken() const {
+    [[nodiscard]] bool is_broken() const {
         if (!is_infinite) return current_durability <= 0;
         return false;
     }
@@ -190,44 +190,44 @@ struct Monster {
         this->crit_rate += wave_num;
     }
 
-    int incoming_damage (const Weapon & weapon, int strength) const {
+    [[nodiscard]] int incoming_damage (const Weapon & weapon, int strength) const {
         int incoming_damage = weapon.damage;
         if (weapon.type == WeaponType::Physical) incoming_damage += strength;
-        for (int i = 0; i < resistances.size(); i++) {
-            if (weapon.type == resistances[i].type && resistances[i].known) incoming_damage += resistances[i].modifier;
+        for (const auto & r : resistances) {
+            if (weapon.type == r.type && r.known) incoming_damage += r.modifier;
         }
-        for (int i = 0; i < weaknesses.size(); i++) {
-            if (weapon.type == weaknesses[i].type && weaknesses[i].known) incoming_damage += weaknesses[i].modifier;
+        for (const auto & w : weaknesses) {
+            if (weapon.type == w.type && w.known) incoming_damage += w.modifier;
         }
         return std::max(0,incoming_damage);
     }
 
     void reveal_affinities (const Weapon & weapon) {
-        for (int i = 0; i < resistances.size(); i++) {
-            if (weapon.type == resistances[i].type) resistances[i].known = true;
+        for (auto & r : resistances) {
+            if (weapon.type == r.type) r.known = true;
         }
-        for (int i = 0; i < weaknesses.size(); i++) {
-            if (weapon.type == weaknesses[i].type) weaknesses[i].known = true;
+        for (auto & w : weaknesses) {
+            if (weapon.type == w.type) w.known = true;
         }
     }
 
-    bool take_damage (Weapon & weapon, const int player_strength) {
+    [[nodiscard]] bool take_damage (Weapon & weapon, const int player_strength) {
         std::uniform_int_distribution<int> distrib(1, 100);
         int effective_hit_rate = std::max(5, weapon.hit_rate-evasion_rate);
         if (distrib(g)<=effective_hit_rate) {
             if (!weapon.is_infinite && !weapon.is_broken()) weapon.current_durability--;
             int additional_damage = 0;
             if(weapon.type == WeaponType::Physical) additional_damage += player_strength;
-            for (int i = 0; i < resistances.size(); i++) {
-                if (weapon.type == resistances[i].type) {
-                    additional_damage += resistances[i].modifier;
-                    resistances[i].known = true;
+            for (auto & r : resistances) {
+                if (weapon.type == r.type) {
+                    additional_damage += r.modifier;
+                    r.known = true;
                 }
             }
-            for (int i = 0; i < weaknesses.size(); i++) {
-                if (weapon.type == weaknesses[i].type) {
-                    additional_damage += weaknesses[i].modifier;
-                    weaknesses[i].known = true;
+            for (auto & w : weaknesses) {
+                if (weapon.type == w.type) {
+                    additional_damage += w.modifier;
+                    w.known = true;
                 }
             }
             int damage_dealt = std::max(0, weapon.damage + additional_damage);
@@ -243,7 +243,7 @@ struct Monster {
         return false;
     }
 
-    bool is_dead() const {
+    [[nodiscard]] bool is_dead() const {
         return hp_remaining <= 0;
     }
 };
@@ -340,11 +340,11 @@ struct Player {
             int additional_damage = 0;
             if(!current_armor.is_broken()) {
                 additional_damage-=current_armor.damage_reduction;
-                for (int i = 0; i < current_armor.resistances.size(); i++) {
-                    if (monster.type == current_armor.resistances[i].type) additional_damage += current_armor.resistances[i].modifier;
+                for (const auto & r : current_armor.resistances) {
+                    if (monster.type == r.type) additional_damage += r.modifier;
                 }
-                for (int i = 0; i < current_armor.weaknesses.size(); i++) {
-                    if (monster.type == current_armor.weaknesses[i].type) additional_damage += current_armor.weaknesses[i].modifier;
+                for (const auto & w : current_armor.weaknesses) {
+                    if (monster.type == w.type) additional_damage += w.modifier;
                 }
             }
             if(!current_armor.is_unbreakable && !current_armor.is_broken()) current_armor.current_durability--;
@@ -376,7 +376,7 @@ struct Player {
         resistance += distrib(g);
     }
 
-    bool has_lost() const {
+    [[nodiscard]] bool has_lost() const {
         return hp_remaining <= 0;
     }
 };
@@ -682,8 +682,7 @@ void combat (Player & player, Monster & monster, std::vector<Monster> & monsters
                 if (player.current_weapons[stoi(weapon_chosen)-1].is_broken()) std::cout << "That weapon is broken, please select another one" << std::endl;
                 else valid_weapon = true;
             }while (!valid_weapon);
-            bool hit = monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength);
-            if(hit) {
+            if(monster.take_damage(player.current_weapons[stoi(weapon_chosen)-1],player.strength)) {
                 monsters_of_the_wave[index_monster].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);
                 list_of_monsters[index_monster].reveal_affinities(player.current_weapons[stoi(weapon_chosen)-1]);
             }
@@ -700,10 +699,7 @@ void combat (Player & player, Monster & monster, std::vector<Monster> & monsters
 }
 
 void start_setup (Player & player, std::vector<Monster> & monsters_of_the_wave, std::vector<Monster> & bosses_of_the_wave, int wave_num) {
-    for (int i = 0; i < player.current_weapons.size(); i++) {
-        player.current_weapons[i].current_durability = player.current_weapons[i].durability;
-    }
-
+    for (auto & w : player.current_weapons) w.current_durability = w.durability;
     player.current_armor.current_durability = player.current_armor.durability;
     player.hp_remaining = player.base_hp;
 
@@ -713,9 +709,8 @@ void start_setup (Player & player, std::vector<Monster> & monsters_of_the_wave, 
     for(int i = 0; i < wave_num; i++) {
         if (i<list_of_bosses.size()) bosses_of_the_wave.push_back(list_of_bosses[i]);
     }
-
-    for (int i=0; i < monsters_of_the_wave.size(); i++) monsters_of_the_wave[i].upgrade_monster(wave_num);
-    for (int i=0; i < bosses_of_the_wave.size(); i++) bosses_of_the_wave[i].upgrade_monster(wave_num);
+    for (auto & m : monsters_of_the_wave) m.upgrade_monster(wave_num);
+    for (auto & b : bosses_of_the_wave) b.upgrade_monster(wave_num);
 }
 
 int select_monster (const std::vector<Monster> & monsters_of_the_wave) {
@@ -778,31 +773,22 @@ void update_current_equipment(Player & player) {
 }
 
 void exclude_weapons (const Player & player, std::vector<Weapon> & available_weapons) {
-    std::vector<int> index;
-    for (int i = 0; i < player.weapons_inventory.size(); i++) {
-        for (int j = 0; j < available_weapons.size(); j++) {
-            if (player.weapons_inventory[i].name == available_weapons[j].name) index.push_back(j);
-        }
-    }
-    int weapons_excluded = 0;
-    for (int i = 0; i < index.size(); i++) {
-        available_weapons.erase(available_weapons.begin()+index[i]-weapons_excluded);
-        weapons_excluded++;
+    for (const auto &player_weapon : player.weapons_inventory) {
+        available_weapons.erase(
+            std::remove_if(available_weapons.begin(), available_weapons.end(),
+                [&player_weapon](const Weapon &w) { return w.name == player_weapon.name; }),
+            available_weapons.end()
+        );
     }
 }
 
-
 void exclude_armor (const Player & player, std::vector<Armor> & available_armor) {
-    std::vector<int> index;
-    for (int i = 0; i < player.armor_inventory.size(); i++) {
-        for (int j = 0; j < available_armor.size(); j++) {
-            if (player.armor_inventory[i].name == available_armor[j].name) index.push_back(j);
-        }
-    }
-    int armors_excluded = 0;
-    for (int i = 0; i < index.size(); i++) {
-        available_armor.erase(available_armor.begin()+index[i]-armors_excluded);
-        armors_excluded++;
+    for (const auto &player_armor : player.armor_inventory) {
+        available_armor.erase(
+            std::remove_if(available_armor.begin(), available_armor.end(),
+                [&player_armor](const Armor &a) { return a.name == player_armor.name; }),
+            available_armor.end()
+        );
     }
 }
 
@@ -922,7 +908,7 @@ void choose_armor (Player & player) {
         std::cout << "This is your current armors' inventory:" << std::endl;
         print_armor_inventory(player);
         std::string choice1;
-        std::cout << "Which weapon do you want to equip? (inventory)" << std::endl;
+        std::cout << "Which armor do you want to equip? (inventory)" << std::endl;
         std::getline(std::cin, choice1);
         player.current_armor = player.armor_inventory[stoi(choice1)-1];
         std::cout << "Do you want to change your current armor? (Y/N)" << std::endl;
@@ -959,7 +945,7 @@ int main () {
 }
 /*
 Da aggiungere: 
-cambiare l'equipaggiamento in uso,
+problema col crash di exclude_weapons(?)
 regex,
 mettere a posto i costruttori/i cicli/le funzioni nodiscard, 
 aggiungere nomi e lore,
